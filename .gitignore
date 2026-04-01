@@ -14,3 +14,7 @@ sp-build-out.txt
 sp-build-err.txt
 sp-build-exit.txt
 wrapper.log
+
+# Locally injected bundled model assets used for release builds
+app/src/main/assets/models/*.gguf
+app/src/main/assets/models/*.tflite

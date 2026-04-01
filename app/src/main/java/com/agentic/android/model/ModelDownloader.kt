@@ -51,6 +51,13 @@ class ModelDownloader(private val localModelManager: LocalModelManager) {
                 }
 
                 val totalBytes = response.body?.contentLength() ?: -1L
+                if (totalBytes > 0 && !localModelManager.hasEnoughSpaceFor(totalBytes)) {
+                    val requiredBytes = localModelManager.getRequiredStorageBytes(totalBytes)
+                    val availableBytes = localModelManager.getAvailableStorage()
+                    throw Exception(
+                        "Not enough storage. Need ${localModelManager.formatSize(requiredBytes)}, found ${localModelManager.formatSize(availableBytes)}."
+                    )
+                }
                 val inputStream = response.body?.byteStream() ?: throw Exception("No response body")
 
                 inputStream.use { input ->

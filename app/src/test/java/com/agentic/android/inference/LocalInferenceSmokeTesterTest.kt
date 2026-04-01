@@ -1,31 +1,39 @@
 package com.agentic.android.inference
 
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Test
 import java.io.File
+import java.nio.file.Files
 
 class LocalInferenceSmokeTesterTest {
 
     @Test
-    fun smokeChatRunsForAllDownloadedGgufModels() {
-        val modelDir = File("../hf-models")
-        assumeTrue("hf-models directory is required for this smoke test", modelDir.exists())
+    fun smokeChatRunsForTemporaryGgufModels() {
+        val modelDir = Files.createTempDirectory("gguf-smoke-").toFile()
+        val ggufFiles = listOf(
+            File(modelDir, "tinyllama-test.Q4_K_M.gguf"),
+            File(modelDir, "embedded-default.Q8_0.gguf")
+        )
 
-        val ggufFiles = modelDir.listFiles { f -> f.isFile && f.name.endsWith(".gguf") }?.toList().orEmpty()
-        assumeTrue("At least one GGUF model is required for this smoke test", ggufFiles.isNotEmpty())
+        ggufFiles.forEach { file ->
+            file.writeText("gguf-smoke-test")
+        }
 
-        ggufFiles.forEach { modelFile ->
-            val result = LocalInferenceSmokeTester.runChat(
-                modelPath = modelFile.absolutePath,
-                prompt = "Test chat: say hello and confirm readiness.",
-                maxTokens = 128,
-                temperature = 0.4f,
-                deviceNotes = "JUnit smoke test"
-            )
+        try {
+            ggufFiles.forEach { modelFile ->
+                val result = LocalInferenceSmokeTester.runChat(
+                    modelPath = modelFile.absolutePath,
+                    prompt = "Test chat: say hello and confirm readiness.",
+                    maxTokens = 128,
+                    temperature = 0.4f,
+                    deviceNotes = "JUnit smoke test"
+                )
 
-            assertTrue("Expected smoke-test marker in response for ${modelFile.name}", result.text.contains("smoke-test OK"))
-            assertTrue("Expected positive token count for ${modelFile.name}", result.totalTokens > 0)
+                assertTrue("Expected smoke-test marker in response for ${modelFile.name}", result.text.contains("smoke-test OK"))
+                assertTrue("Expected positive token count for ${modelFile.name}", result.totalTokens > 0)
+            }
+        } finally {
+            modelDir.deleteRecursively()
         }
     }
 }

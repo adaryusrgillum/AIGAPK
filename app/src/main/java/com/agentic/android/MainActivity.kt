@@ -94,6 +94,18 @@ private fun AgentHomeScreen(
     modelDownloader: ModelDownloader,
     localInferenceEngine: LocalInferenceEngine
 ) {
+    var bundledModelBootstrapComplete by remember { mutableStateOf(false) }
+    var bundledModelBootstrapStatus by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            localModelManager.getDefaultBundledModelName()?.let { modelName ->
+                bundledModelBootstrapStatus = localModelManager.installBundledModel(modelName).message
+            }
+        }
+        bundledModelBootstrapComplete = true
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -122,8 +134,8 @@ private fun AgentHomeScreen(
             HeroCard()
             CapabilityRow()
             AgentActionsPanel()
-            LocalModelsPanel(localModelManager, modelDownloader)
-            LocalChatPanel(localInferenceEngine)
+            LocalModelsPanel(localModelManager, modelDownloader, bundledModelBootstrapComplete, bundledModelBootstrapStatus)
+            LocalChatPanel(localModelManager, localInferenceEngine, bundledModelBootstrapComplete)
             BrowserPanel()
         }
     }
@@ -375,7 +387,9 @@ private fun launchSafeIntent(context: android.content.Context, intent: Intent, s
 @Composable
 private fun LocalModelsPanel(
     localModelManager: LocalModelManager,
-    modelDownloader: ModelDownloader
+    modelDownloader: ModelDownloader,
+    bundledModelBootstrapComplete: Boolean,
+    bundledModelBootstrapStatus: String?
 ) {
     val scope = rememberCoroutineScope()
     var localModels by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -384,11 +398,18 @@ private fun LocalModelsPanel(
     var downloadingModel by remember { mutableStateOf<String?>(null) }
     var downloadProgress by remember { mutableStateOf(0) }
     var showAvailableModels by remember { mutableStateOf(false) }
+    var bundledModels by remember { mutableStateOf<List<String>>(emptyList()) }
+    var transferStatus by remember { mutableStateOf<String?>(null) }
 
     // Refresh local models on first composition.
-    LaunchedEffect(Unit) {
+    LaunchedEffect(bundledModelBootstrapComplete) {
+        if (!bundledModelBootstrapComplete) {
+            return@LaunchedEffect
+        }
+
         withContext(Dispatchers.IO) {
             localModels = localModelManager.listLocalModels()
+            bundledModels = localModelManager.listBundledModels()
             totalStorageUsed = localModelManager.getTotalStorageUsed()
             availableStorage = localModelManager.getAvailableStorage()
         }
@@ -411,6 +432,30 @@ private fun LocalModelsPanel(
                 text = "Storage: ${localModelManager.formatSize(totalStorageUsed)} used / ${localModelManager.formatSize(availableStorage)} available",
                 style = MaterialTheme.typography.bodySmall
             )
+
+            if (!bundledModelBootstrapStatus.isNullOrBlank()) {
+                Text(
+                    text = bundledModelBootstrapStatus,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (bundledModelBootstrapStatus.startsWith("Not enough", ignoreCase = true)) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.secondary
+                    }
+                )
+            }
+
+            if (!transferStatus.isNullOrBlank()) {
+                Text(
+                    text = transferStatus.orEmpty(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (transferStatus!!.startsWith("Error") || transferStatus!!.startsWith("Not enough")) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.secondary
+                    }
+                )
+            }
 
             if (localModels.isEmpty()) {
                 Text(
@@ -454,6 +499,66 @@ private fun LocalModelsPanel(
             }
 
             HorizontalDivider()
+
+            if (bundledModels.isNotEmpty()) {
+                Text("Bundled Models", style = MaterialTheme.typography.titleSmall)
+                bundledModels.forEach { modelName ->
+                    val isInstalled = localModels.contains(modelName)
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isInstalled) MaterialTheme.colorScheme.tertiaryContainer
+                            else MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(modelName, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                "Bundled in APK: ${localModelManager.formatSize(localModelManager.getBundledModelSize(modelName))}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                "Recommended free space: ${localModelManager.formatSize(localModelManager.getRequiredStorageBytes(localModelManager.getBundledModelSize(modelName)))}",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+
+                            if (isInstalled) {
+                                Text("Installed locally", color = MaterialTheme.colorScheme.primary)
+                            } else {
+                                Button(
+                                    onClick = {
+                                        downloadingModel = modelName
+                                        transferStatus = null
+                                        scope.launch {
+                                            withContext(Dispatchers.IO) {
+                                                val installResult = localModelManager.installBundledModel(modelName) { percent ->
+                                                    downloadProgress = percent
+                                                }
+                                                transferStatus = installResult.message
+                                                if (installResult.success) {
+                                                    localModels = localModelManager.listLocalModels()
+                                                    totalStorageUsed = localModelManager.getTotalStorageUsed()
+                                                    availableStorage = localModelManager.getAvailableStorage()
+                                                }
+                                                downloadingModel = null
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    enabled = downloadingModel == null
+                                ) {
+                                    Text("Install Bundled Model")
+                                }
+                            }
+                        }
+                    }
+                }
+
+                HorizontalDivider()
+            }
 
             Button(
                 onClick = { showAvailableModels = !showAvailableModels },
@@ -516,6 +621,7 @@ private fun LocalModelsPanel(
                                     Button(
                                         onClick = {
                                             downloadingModel = modelInfo.name
+                                            transferStatus = null
                                             scope.launch {
                                                 withContext(Dispatchers.IO) {
                                                     modelDownloader.downloadModel(
@@ -523,9 +629,13 @@ private fun LocalModelsPanel(
                                                         modelName = modelInfo.name
                                                     ).collectLatest { progress ->
                                                         downloadProgress = progress.percentComplete
+                                                        transferStatus = progress.status
                                                         if (progress.percentComplete == 100) {
                                                             localModels = localModelManager.listLocalModels()
                                                             totalStorageUsed = localModelManager.getTotalStorageUsed()
+                                                            availableStorage = localModelManager.getAvailableStorage()
+                                                            downloadingModel = null
+                                                        } else if (progress.status.startsWith("Error:")) {
                                                             downloadingModel = null
                                                         }
                                                     }
@@ -551,6 +661,7 @@ private fun LocalModelsPanel(
                     scope.launch {
                         withContext(Dispatchers.IO) {
                             localModels = localModelManager.listLocalModels()
+                            bundledModels = localModelManager.listBundledModels()
                             totalStorageUsed = localModelManager.getTotalStorageUsed()
                             availableStorage = localModelManager.getAvailableStorage()
                         }
@@ -565,11 +676,15 @@ private fun LocalModelsPanel(
 }
 
 @Composable
-private fun LocalChatPanel(localInferenceEngine: LocalInferenceEngine) {
+private fun LocalChatPanel(
+    localModelManager: LocalModelManager,
+    localInferenceEngine: LocalInferenceEngine,
+    bundledModelBootstrapComplete: Boolean
+) {
     val scope = rememberCoroutineScope()
 
-    var downloadedModels by remember { mutableStateOf(localInferenceEngine.listAvailableLocalModels().map { it.first }) }
-    var model by remember { mutableStateOf(downloadedModels.firstOrNull().orEmpty()) }
+    var downloadedModels by remember { mutableStateOf<List<String>>(emptyList()) }
+    var model by remember { mutableStateOf("") }
     var prompt by remember { mutableStateOf("Research: summarize the top 3 Android agent architecture patterns.") }
     var showModelPresets by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
@@ -585,6 +700,29 @@ private fun LocalChatPanel(localInferenceEngine: LocalInferenceEngine) {
                 )
             )
         )
+    }
+
+    LaunchedEffect(bundledModelBootstrapComplete) {
+        if (!bundledModelBootstrapComplete) {
+            return@LaunchedEffect
+        }
+
+        withContext(Dispatchers.IO) {
+            downloadedModels = localInferenceEngine.listAvailableLocalModels().map { it.first }
+        }
+
+        val defaultBundledModel = localModelManager.getDefaultBundledModelName()
+        model = when {
+            defaultBundledModel != null && downloadedModels.contains(defaultBundledModel) -> defaultBundledModel
+            downloadedModels.isNotEmpty() -> downloadedModels.first()
+            else -> ""
+        }
+
+        modelStatus = if (model.isNotBlank()) {
+            "Default local model: $model"
+        } else {
+            "No local model installed yet"
+        }
     }
 
     Card(shape = RoundedCornerShape(24.dp)) {
