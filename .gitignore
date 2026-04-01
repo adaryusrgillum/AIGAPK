@@ -5,6 +5,9 @@ build/
 captures/
 *.iml
 app/build/
+keystore/
+*.jks
+*.keystore
 
 # Local bootstrap toolchains and generated build logs
 tooling/

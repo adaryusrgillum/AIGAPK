@@ -1,7 +1,23 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+
+val releaseStoreFilePath = localProperties.getProperty("release.storeFile")
+val releaseStorePassword = localProperties.getProperty("release.storePassword")
+val releaseKeyAlias = localProperties.getProperty("release.keyAlias")
+val releaseKeyPassword = localProperties.getProperty("release.keyPassword")
+val hasReleaseSigning = listOf(releaseStoreFilePath, releaseStorePassword, releaseKeyAlias, releaseKeyPassword)
+    .all { !it.isNullOrBlank() }
 
 android {
     namespace = "com.agentic.android"
@@ -11,8 +27,8 @@ android {
         applicationId = "com.abelinsgroup.mobile"
         minSdk = 26
         targetSdk = 34
-        versionCode = 312
-        versionName = "3.1.2"
+        versionCode = 320
+        versionName = "3.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -20,9 +36,23 @@ android {
         }
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = rootProject.file(releaseStoreFilePath!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            signingConfig = if (hasReleaseSigning) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+            isDebuggable = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
