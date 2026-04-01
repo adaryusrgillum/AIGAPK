@@ -36,8 +36,8 @@ export function AmbientBackdrop({ tone = 'gold' }) {
   }, [values]);
 
   const palette = tone === 'blue'
-    ? [COLORS.signalBlue, COLORS.primary, COLORS.secondary]
-    : [COLORS.secondary, COLORS.secondarySoft, COLORS.signalBlue];
+    ? [COLORS.signalBlue, COLORS.primary, COLORS.secondarySoft]
+    : [COLORS.signalBlue, COLORS.secondarySoft, COLORS.primary];
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: 'rgba(200, 169, 81, 0.18)',
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
     alignItems: 'center',
     justifyContent: 'center',
   },

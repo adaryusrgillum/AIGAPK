@@ -30,7 +30,7 @@ export function SectionHeader({ title, subtitle }) {
 export function TestimonialCard({ item }) {
   return (
     <View style={styles.testimonialCard}>
-      <MaterialCommunityIcons name="format-quote-open" size={24} color={COLORS.secondary} />
+      <MaterialCommunityIcons name="format-quote-open" size={24} color={COLORS.primary} />
       <Text style={styles.testimonialText}>{item.text}</Text>
       <Text style={styles.testimonialAuthor}>— {item.author}</Text>
     </View>

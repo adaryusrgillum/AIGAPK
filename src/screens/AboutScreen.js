@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, StatusBar, Linking, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, StatusBar, Linking, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
 import { CARRIERS, CONTACT_INFO } from '../data';
@@ -25,7 +25,7 @@ export default function AboutScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          <MaterialCommunityIcons name="shield-check" size={50} color={COLORS.secondary} />
+          <Image source={require('../../assets/logo-icon.png')} style={styles.aboutLogoImg} />
         </View>
         <Text style={styles.headerTitle}>Abel Insurance Group</Text>
         <Text style={styles.headerSub}>A Family Tradition of Service</Text>
@@ -137,6 +137,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
+    overflow: 'hidden',
+  },
+  aboutLogoImg: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
   },
   headerTitle: {
     fontSize: 24,

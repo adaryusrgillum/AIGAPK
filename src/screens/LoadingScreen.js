@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, StatusBar, StyleSheet, Text, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Animated, Image, StatusBar, StyleSheet, Text, View } from 'react-native';
 
 import { AmbientBackdrop, InsightChip, TiltCard } from '../components/ExperienceComponents';
 import { COLORS } from '../theme';
@@ -57,13 +56,13 @@ export default function LoadingScreen({ onComplete }) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.midnight} />
-      <AmbientBackdrop tone="gold" />
+      <AmbientBackdrop tone="blue" />
 
       <View style={styles.content}>
         <Animated.View style={{ transform: [{ scale: pulseScale }] }}>
           <TiltCard style={styles.centerCard}>
             <View style={styles.iconShell}>
-              <MaterialCommunityIcons name="shield-star" size={34} color={COLORS.secondary} />
+              <Image source={require('../../assets/logo-icon.png')} style={styles.logoImg} />
             </View>
             <Text style={styles.brand}>Abel Insurance Group</Text>
             <Text style={styles.title}>We're here to put your needs first</Text>
@@ -109,10 +108,16 @@ const styles = StyleSheet.create({
     width: 68,
     height: 68,
     borderRadius: 22,
-    backgroundColor: 'rgba(200, 169, 81, 0.12)',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
+    overflow: 'hidden',
+  },
+  logoImg: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
   },
   brand: {
     fontSize: 15,

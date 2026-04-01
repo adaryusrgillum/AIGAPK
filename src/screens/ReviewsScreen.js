@@ -9,10 +9,10 @@ function ReviewCard({ item }) {
   return (
     <View style={styles.reviewCard}>
       <View style={styles.quoteRow}>
-        <MaterialCommunityIcons name="format-quote-open" size={28} color={COLORS.secondary} />
+        <MaterialCommunityIcons name="format-quote-open" size={28} color={COLORS.primary} />
         <View style={styles.starsRow}>
           {[1, 2, 3, 4, 5].map((s) => (
-            <MaterialCommunityIcons key={s} name="star" size={16} color={COLORS.secondary} />
+            <MaterialCommunityIcons key={s} name="star" size={16} color={COLORS.primary} />
           ))}
         </View>
       </View>

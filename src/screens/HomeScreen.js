@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, StatusBar, FlatList, Linking, TouchableOpacity,
+  View, Text, ScrollView, StyleSheet, StatusBar, FlatList, Linking, TouchableOpacity, Image,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -22,10 +22,10 @@ export default function HomeScreen({ navigation }) {
       <StatusBar barStyle="light-content" backgroundColor={COLORS.midnight} />
 
       <View style={styles.hero}>
-        <AmbientBackdrop tone="gold" />
+        <AmbientBackdrop tone="blue" />
 
         <View style={styles.logoRow}>
-          <MaterialCommunityIcons name="shield-check" size={40} color={COLORS.secondary} />
+          <Image source={require('../../assets/logo-icon.png')} style={styles.logoIcon} />
           <Text style={styles.logoText}>{'Abel Insurance\nGroup'}</Text>
         </View>
 
@@ -77,7 +77,7 @@ export default function HomeScreen({ navigation }) {
             onPress={() => Linking.openURL(CONTACT_INFO.website + '/request-quote/')}
             activeOpacity={0.84}
           >
-            <MaterialCommunityIcons name="rocket-launch-outline" size={18} color={COLORS.midnight} />
+            <MaterialCommunityIcons name="rocket-launch-outline" size={18} color={COLORS.primary} />
             <Text style={styles.heroPrimaryButtonText}>Start a Quote</Text>
           </TouchableOpacity>
 
@@ -126,7 +126,7 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.solutionTitle}>Personal Insurance</Text>
           <Text style={styles.solutionDesc}>Home, Auto, Life, and more</Text>
           <View style={styles.solutionArrow}>
-            <MaterialCommunityIcons name="arrow-right" size={18} color={COLORS.secondary} />
+            <MaterialCommunityIcons name="arrow-right" size={18} color={COLORS.white} />
           </View>
         </TouchableOpacity>
 
@@ -139,7 +139,7 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.solutionTitle}>Business Insurance</Text>
           <Text style={styles.solutionDesc}>Liability, Property, Workers' Comp</Text>
           <View style={styles.solutionArrow}>
-            <MaterialCommunityIcons name="arrow-right" size={18} color={COLORS.secondary} />
+            <MaterialCommunityIcons name="arrow-right" size={18} color={COLORS.white} />
           </View>
         </TouchableOpacity>
       </View>
@@ -159,9 +159,15 @@ export default function HomeScreen({ navigation }) {
         subtitle="An independent agency gives you options"
       />
       <View style={styles.carriersRow}>
-        {CARRIERS.map((carrier, index) => (
+        {[
+          { name: 'Progressive', img: require('../../assets/images/carrier-progressive.png') },
+          { name: 'Liberty Mutual', img: require('../../assets/images/carrier-liberty-mutual.png') },
+          { name: 'Travelers', img: require('../../assets/images/carrier-travelers.png') },
+          { name: 'American Modern', img: require('../../assets/images/carrier-american-modern.png') },
+          { name: 'Hagerty', img: require('../../assets/images/carrier-hagerty.png') },
+        ].map((carrier, index) => (
           <View key={index} style={styles.carrierBadge}>
-            <Text style={styles.carrierText}>{carrier}</Text>
+            <Image source={carrier.img} style={styles.carrierLogo} resizeMode="contain" />
           </View>
         ))}
       </View>
@@ -216,6 +222,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 18,
+  },
+  logoIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
   },
   logoText: {
     fontSize: 18,
@@ -332,7 +343,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   heroPrimaryButtonText: {
-    color: COLORS.midnight,
+    color: COLORS.primary,
     fontSize: 15,
     fontWeight: '900',
   },
@@ -396,7 +407,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: COLORS.offWhite,
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -409,7 +420,7 @@ const styles = StyleSheet.create({
   },
   carrierBadge: {
     backgroundColor: COLORS.white,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 10,
     elevation: 1,
@@ -417,11 +428,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  carrierText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.primary,
+  carrierLogo: {
+    width: 80,
+    height: 40,
   },
   quickContact: {
     backgroundColor: COLORS.primaryDark,

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Animated,
+  Image,
   KeyboardAvoidingView,
   Linking,
   Platform,
@@ -129,7 +130,7 @@ export default function LoginScreen() {
             <TiltCard style={styles.showcaseCard}>
               <View style={styles.showcaseHeader}>
                 <View style={styles.showcaseIcon}>
-                  <MaterialCommunityIcons name="shield-check" size={24} color={COLORS.secondary} />
+                  <Image source={require('../../assets/logo-icon.png')} style={styles.showcaseLogoImg} />
                 </View>
                 <View>
                   <Text style={styles.showcaseTitle}>Your insurance, simplified</Text>
@@ -210,7 +211,7 @@ export default function LoginScreen() {
             >
               <Text style={styles.primaryButtonText}>{buttonLabels[mode]}</Text>
               {!isSubmitting && (
-                <MaterialCommunityIcons name="arrow-right" size={18} color={COLORS.midnight} />
+                <MaterialCommunityIcons name="arrow-right" size={18} color={COLORS.primary} />
               )}
             </TouchableOpacity>
 
@@ -335,9 +336,15 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 18,
-    backgroundColor: 'rgba(200, 169, 81, 0.14)',
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  showcaseLogoImg: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
   },
   showcaseTitle: {
     fontSize: 17,
@@ -412,7 +419,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   primaryButtonText: {
-    color: COLORS.midnight,
+    color: COLORS.primary,
     fontSize: 15,
     fontWeight: '900',
   },
