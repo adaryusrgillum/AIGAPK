@@ -14,7 +14,7 @@ export default function HomeScreen({ navigation }) {
   const insights = [
     { icon: 'map-marker-radius', label: 'Licensed states', value: String(CONTACT_INFO.states.length) },
     { icon: 'handshake-outline', label: 'Carrier partners', value: String(CARRIERS.length) },
-    { icon: 'clock-fast', label: 'Response model', value: 'Fast' },
+    { icon: 'clock-fast', label: 'Quick response', value: 'Always' },
   ];
 
   return (
@@ -29,10 +29,10 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.logoText}>{'Abel Insurance\nGroup'}</Text>
         </View>
 
-        <Text style={styles.heroEyebrow}>Interactive insurance workspace</Text>
-        <Text style={styles.heroTitle}>{'Fast mobile onboarding with\n3D-style motion and secure access'}</Text>
+        <Text style={styles.heroEyebrow}>We're here to put your needs first</Text>
+        <Text style={styles.heroTitle}>{'Protecting what\nmatters most'}</Text>
         <Text style={styles.heroSubtitle}>
-          Dedicated to protecting what matters most. Family-owned independent insurance agency serving Buckhannon, WV and beyond with a richer client-ready mobile experience.
+          A family-owned independent insurance agency serving Buckhannon, WV and beyond. Local knowledge, innovative solutions, and personal service you can count on.
         </Text>
 
         <View style={styles.insightsRow}>
@@ -48,8 +48,8 @@ export default function HomeScreen({ navigation }) {
 
         <View style={styles.heroScene}>
           <TiltCard style={styles.heroPrimaryCard}>
-            <Text style={styles.heroCardEyebrow}>Coverage cockpit</Text>
-            <Text style={styles.heroCardTitle}>Personal + business policies in one mobile flow</Text>
+            <Text style={styles.heroCardEyebrow}>Your coverage</Text>
+            <Text style={styles.heroCardTitle}>Personal and business insurance in one place</Text>
             <View style={styles.heroCardRow}>
               <View style={styles.heroStatBadge}>
                 <MaterialCommunityIcons name="home-city" size={16} color={COLORS.secondary} />
@@ -64,9 +64,9 @@ export default function HomeScreen({ navigation }) {
 
           <TiltCard style={styles.heroAccentCard}>
             <MaterialCommunityIcons name="chart-timeline-variant" size={24} color={COLORS.secondary} />
-            <Text style={styles.accentCardTitle}>Client-ready dashboard</Text>
+            <Text style={styles.accentCardTitle}>Get a quote</Text>
             <Text style={styles.accentCardText}>
-              Loading, login, animations, and quick action routing are now built into the app shell.
+              Request a quote, review your policies, and contact us — all from your phone.
             </Text>
           </TiltCard>
         </View>

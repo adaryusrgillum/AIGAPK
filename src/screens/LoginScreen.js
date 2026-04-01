@@ -121,7 +121,7 @@ export default function LoginScreen() {
             <Text style={styles.eyebrow}>Secure Client Access</Text>
             <Text style={styles.title}>{titles[mode]}</Text>
             <Text style={styles.subtitle}>
-              Access coverages, review policy options, contact the agency, and jump into the client portal from a modern mobile flow.
+              Manage your policies, request quotes, and connect with our team from anywhere.
             </Text>
           </View>
 
@@ -129,11 +129,11 @@ export default function LoginScreen() {
             <TiltCard style={styles.showcaseCard}>
               <View style={styles.showcaseHeader}>
                 <View style={styles.showcaseIcon}>
-                  <MaterialCommunityIcons name="cube-outline" size={24} color={COLORS.secondary} />
+                  <MaterialCommunityIcons name="shield-check" size={24} color={COLORS.secondary} />
                 </View>
                 <View>
-                  <Text style={styles.showcaseTitle}>Animated account shell</Text>
-                  <Text style={styles.showcaseDesc}>Ready for quotes, onboarding, and richer 3D-style motion.</Text>
+                  <Text style={styles.showcaseTitle}>Your insurance, simplified</Text>
+                  <Text style={styles.showcaseDesc}>Quotes, policy management, and expert support in one place.</Text>
                 </View>
               </View>
               <View style={styles.showcaseStats}>

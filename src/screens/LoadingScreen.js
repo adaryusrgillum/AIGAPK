@@ -6,9 +6,9 @@ import { AmbientBackdrop, InsightChip, TiltCard } from '../components/Experience
 import { COLORS } from '../theme';
 
 const STAGES = [
-  'Loading secure client experiences',
-  'Syncing personal and business products',
-  'Preparing animated dashboard',
+  'Connecting to Abel Insurance Group',
+  'Loading your insurance options',
+  'Getting everything ready',
 ];
 
 export default function LoadingScreen({ onComplete }) {
@@ -66,17 +66,17 @@ export default function LoadingScreen({ onComplete }) {
               <MaterialCommunityIcons name="shield-star" size={34} color={COLORS.secondary} />
             </View>
             <Text style={styles.brand}>Abel Insurance Group</Text>
-            <Text style={styles.title}>High-trust mobile experience</Text>
+            <Text style={styles.title}>We're here to put your needs first</Text>
             <Text style={styles.subtitle}>
-              Faster onboarding, animated surfaces, and direct access to quotes, coverage, and contact tools.
+              Personal service that combines local expertise with modern technology. Serving Buckhannon, WV and beyond.
             </Text>
           </TiltCard>
         </Animated.View>
 
         <View style={styles.metricsRow}>
-          <InsightChip icon="lightning-bolt" label="Startup" value="Fast" />
-          <InsightChip icon="cube-scan" label="Motion" value="3D" />
-          <InsightChip icon="shield-check" label="Flow" value="Secure" />
+          <InsightChip icon="lightning-bolt" label="States" value="6" />
+          <InsightChip icon="shield-check" label="Coverage" value="30+" />
+          <InsightChip icon="account-group" label="Family-owned" value="Yes" />
         </View>
 
         <View style={styles.progressWrap}>
