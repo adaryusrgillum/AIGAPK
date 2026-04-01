@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.agentic.android.model.LocalModelManager
 import com.agentic.android.model.ModelDownloader
+import com.agentic.android.model.QuantizedModelRegistry
 import com.agentic.android.ollama.OllamaClient
 import com.agentic.android.ollama.OllamaMessage
 import com.agentic.android.ui.theme.AgenticAndroidTheme
@@ -269,6 +270,7 @@ private fun LocalModelsPanel(
     var availableStorage by remember { mutableStateOf(0L) }
     var downloadingModel by remember { mutableStateOf<String?>(null) }
     var downloadProgress by remember { mutableStateOf(0) }
+    var showAvailableModels by remember { mutableStateOf(false) }
 
     // Refresh local models on first load
     remember {
@@ -335,6 +337,86 @@ private fun LocalModelsPanel(
                                 }
                             ) {
                                 Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                            }
+                        }
+                    }
+                }
+            }
+
+            HorizontalDivider()
+
+            Button(
+                onClick = { showAvailableModels = !showAvailableModels },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(if (showAvailableModels) "Hide Available Models" else "Show Available Models")
+            }
+
+            if (showAvailableModels) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    QuantizedModelRegistry.availableModels.forEach { modelInfo ->
+                        val isDownloaded = localModels.contains(modelInfo.name)
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isDownloaded) MaterialTheme.colorScheme.tertiaryContainer 
+                                                else MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column {
+                                        Text(
+                                            modelInfo.displayName,
+                                            fontWeight = FontWeight.SemiBold,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Text(
+                                            modelInfo.description,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                        Text(
+                                            "Size: ${modelInfo.size}",
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
+                                    if (isDownloaded) {
+                                        Text("✓ Downloaded", color = MaterialTheme.colorScheme.primary)
+                                    }
+                                }
+
+                                if (!isDownloaded) {
+                                    Button(
+                                        onClick = {
+                                            downloadingModel = modelInfo.name
+                                            scope.launch {
+                                                withContext(Dispatchers.IO) {
+                                                    modelDownloader.downloadModel(
+                                                        url = modelInfo.url,
+                                                        modelName = modelInfo.name
+                                                    ).collectLatest { progress ->
+                                                        downloadProgress = progress.percentComplete
+                                                        if (progress.percentComplete == 100) {
+                                                            localModels = localModelManager.listLocalModels()
+                                                            totalStorageUsed = localModelManager.getTotalStorageUsed()
+                                                            downloadingModel = null
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        enabled = downloadingModel == null
+                                    ) {
+                                        Text("Download")
+                                    }
+                                }
                             }
                         }
                     }
