@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Alert,
   Animated,
   KeyboardAvoidingView,
   Linking,
@@ -16,12 +17,20 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AmbientBackdrop, TiltCard } from '../components/ExperienceComponents';
 import { CONTACT_INFO } from '../data';
+import { signIn, signUp, resetPassword } from '../services/auth';
 import { COLORS } from '../theme';
 
-export default function LoginScreen({ onLogin }) {
+const MODE_SIGN_IN = 'signin';
+const MODE_SIGN_UP = 'signup';
+const MODE_RESET = 'reset';
+
+export default function LoginScreen() {
+  const [mode, setMode] = useState(MODE_SIGN_IN);
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const enter = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -30,20 +39,72 @@ export default function LoginScreen({ onLogin }) {
       duration: 900,
       useNativeDriver: true,
     });
-
     animation.start();
-
     return () => animation.stop();
   }, [enter]);
 
   const opacity = enter.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
   const translateY = enter.interpolate({ inputRange: [0, 1], outputRange: [36, 0] });
 
-  const handleLogin = () => {
+  const friendlyError = (code) => {
+    const map = {
+      'auth/invalid-email': 'Please enter a valid email address.',
+      'auth/user-disabled': 'This account has been disabled.',
+      'auth/user-not-found': 'No account found with this email.',
+      'auth/wrong-password': 'Incorrect password. Try again.',
+      'auth/invalid-credential': 'Invalid email or password.',
+      'auth/email-already-in-use': 'An account already exists with this email.',
+      'auth/weak-password': 'Password must be at least 6 characters.',
+      'auth/too-many-requests': 'Too many attempts. Please wait and try again.',
+      'auth/network-request-failed': 'Network error. Check your connection.',
+    };
+    return map[code] || 'Something went wrong. Please try again.';
+  };
+
+  const handleSubmit = async () => {
+    setError('');
+    const trimEmail = email.trim();
+    if (!trimEmail) {
+      setError('Please enter your email.');
+      return;
+    }
+    if (mode !== MODE_RESET && !password) {
+      setError('Please enter your password.');
+      return;
+    }
+
     setIsSubmitting(true);
-    setTimeout(() => {
-      onLogin({ email: email || 'guest@abelinsgroup.com' });
-    }, 700);
+    try {
+      if (mode === MODE_SIGN_IN) {
+        await signIn(trimEmail, password);
+      } else if (mode === MODE_SIGN_UP) {
+        await signUp(trimEmail, password, name.trim() || undefined);
+      } else {
+        await resetPassword(trimEmail);
+        Alert.alert('Check your email', 'A password reset link has been sent to ' + trimEmail);
+        setMode(MODE_SIGN_IN);
+      }
+    } catch (err) {
+      setError(friendlyError(err.code));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const switchMode = (next) => {
+    setError('');
+    setMode(next);
+  };
+
+  const titles = {
+    [MODE_SIGN_IN]: 'Sign in to your policy dashboard',
+    [MODE_SIGN_UP]: 'Create your account',
+    [MODE_RESET]: 'Reset your password',
+  };
+  const buttonLabels = {
+    [MODE_SIGN_IN]: isSubmitting ? 'Signing in...' : 'Continue to Dashboard',
+    [MODE_SIGN_UP]: isSubmitting ? 'Creating account...' : 'Create Account',
+    [MODE_RESET]: isSubmitting ? 'Sending...' : 'Send Reset Link',
   };
 
   return (
@@ -58,39 +119,62 @@ export default function LoginScreen({ onLogin }) {
         <Animated.View style={[styles.content, { opacity, transform: [{ translateY }] }]}>
           <View style={styles.topCopy}>
             <Text style={styles.eyebrow}>Secure Client Access</Text>
-            <Text style={styles.title}>Sign in to your policy dashboard</Text>
+            <Text style={styles.title}>{titles[mode]}</Text>
             <Text style={styles.subtitle}>
               Access coverages, review policy options, contact the agency, and jump into the client portal from a modern mobile flow.
             </Text>
           </View>
 
-          <TiltCard style={styles.showcaseCard}>
-            <View style={styles.showcaseHeader}>
-              <View style={styles.showcaseIcon}>
-                <MaterialCommunityIcons name="cube-outline" size={24} color={COLORS.secondary} />
+          {mode === MODE_SIGN_IN && (
+            <TiltCard style={styles.showcaseCard}>
+              <View style={styles.showcaseHeader}>
+                <View style={styles.showcaseIcon}>
+                  <MaterialCommunityIcons name="cube-outline" size={24} color={COLORS.secondary} />
+                </View>
+                <View>
+                  <Text style={styles.showcaseTitle}>Animated account shell</Text>
+                  <Text style={styles.showcaseDesc}>Ready for quotes, onboarding, and richer 3D-style motion.</Text>
+                </View>
               </View>
-              <View>
-                <Text style={styles.showcaseTitle}>Animated account shell</Text>
-                <Text style={styles.showcaseDesc}>Ready for quotes, onboarding, and richer 3D-style motion.</Text>
+              <View style={styles.showcaseStats}>
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>6</Text>
+                  <Text style={styles.statLabel}>Licensed States</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>19+</Text>
+                  <Text style={styles.statLabel}>Coverage Types</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>24/7</Text>
+                  <Text style={styles.statLabel}>Portal Access</Text>
+                </View>
               </View>
-            </View>
-            <View style={styles.showcaseStats}>
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>6</Text>
-                <Text style={styles.statLabel}>Licensed States</Text>
-              </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>19+</Text>
-                <Text style={styles.statLabel}>Coverage Types</Text>
-              </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>24/7</Text>
-                <Text style={styles.statLabel}>Portal Access</Text>
-              </View>
-            </View>
-          </TiltCard>
+            </TiltCard>
+          )}
 
           <View style={styles.formCard}>
+            {error ? (
+              <View style={styles.errorBox}>
+                <MaterialCommunityIcons name="alert-circle-outline" size={18} color="#FF6B6B" />
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : null}
+
+            {mode === MODE_SIGN_UP && (
+              <View style={styles.fieldWrap}>
+                <Text style={styles.fieldLabel}>Full Name</Text>
+                <TextInput
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                  placeholder="Jane Doe"
+                  placeholderTextColor={COLORS.slateText}
+                  style={styles.input}
+                />
+              </View>
+            )}
+
             <View style={styles.fieldWrap}>
               <Text style={styles.fieldLabel}>Email</Text>
               <TextInput
@@ -103,27 +187,82 @@ export default function LoginScreen({ onLogin }) {
                 style={styles.input}
               />
             </View>
-            <View style={styles.fieldWrap}>
-              <Text style={styles.fieldLabel}>Password</Text>
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                placeholder="Enter password"
-                placeholderTextColor={COLORS.slateText}
-                style={styles.input}
-              />
-            </View>
 
-            <TouchableOpacity style={styles.primaryButton} onPress={handleLogin} activeOpacity={0.86}>
-              <Text style={styles.primaryButtonText}>
-                {isSubmitting ? 'Unlocking Workspace...' : 'Continue to Dashboard'}
-              </Text>
-              <MaterialCommunityIcons name="arrow-right" size={18} color={COLORS.midnight} />
-            </TouchableOpacity>
+            {mode !== MODE_RESET && (
+              <View style={styles.fieldWrap}>
+                <Text style={styles.fieldLabel}>Password</Text>
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  placeholder="Enter password"
+                  placeholderTextColor={COLORS.slateText}
+                  style={styles.input}
+                />
+              </View>
+            )}
 
             <TouchableOpacity
-              style={styles.secondaryButton}
+              style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}
+              onPress={handleSubmit}
+              activeOpacity={0.86}
+              disabled={isSubmitting}
+            >
+              <Text style={styles.primaryButtonText}>{buttonLabels[mode]}</Text>
+              {!isSubmitting && (
+                <MaterialCommunityIcons name="arrow-right" size={18} color={COLORS.midnight} />
+              )}
+            </TouchableOpacity>
+
+            {mode === MODE_SIGN_IN && (
+              <>
+                <TouchableOpacity
+                  style={styles.textButton}
+                  onPress={() => switchMode(MODE_RESET)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.textButtonLabel}>Forgot password?</Text>
+                </TouchableOpacity>
+
+                <View style={styles.dividerRow}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>or</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={() => switchMode(MODE_SIGN_UP)}
+                  activeOpacity={0.82}
+                >
+                  <MaterialCommunityIcons name="account-plus-outline" size={18} color={COLORS.white} />
+                  <Text style={styles.secondaryButtonText}>Create a New Account</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {mode === MODE_SIGN_UP && (
+              <TouchableOpacity
+                style={styles.textButton}
+                onPress={() => switchMode(MODE_SIGN_IN)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.textButtonLabel}>Already have an account? Sign in</Text>
+              </TouchableOpacity>
+            )}
+
+            {mode === MODE_RESET && (
+              <TouchableOpacity
+                style={styles.textButton}
+                onPress={() => switchMode(MODE_SIGN_IN)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.textButtonLabel}>Back to sign in</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={styles.portalButton}
               onPress={() => Linking.openURL(CONTACT_INFO.clientPortal)}
               activeOpacity={0.82}
             >
@@ -137,7 +276,7 @@ export default function LoginScreen({ onLogin }) {
               activeOpacity={0.8}
             >
               <MaterialCommunityIcons name="phone-in-talk" size={18} color={COLORS.secondary} />
-              <Text style={styles.linkText}>Need help signing in? Call {CONTACT_INFO.phone}</Text>
+              <Text style={styles.linkText}>Need help? Call {CONTACT_INFO.phone}</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -293,6 +432,63 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 14,
     fontWeight: '700',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,107,107,0.12)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,107,0.25)',
+    padding: 12,
+    marginBottom: 14,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#FF6B6B',
+    lineHeight: 18,
+  },
+  textButton: {
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginTop: 4,
+  },
+  textButtonLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.secondary,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  dividerText: {
+    color: COLORS.slateText,
+    fontSize: 12,
+    marginHorizontal: 14,
+  },
+  portalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.glassBorder,
+    paddingVertical: 15,
+    marginTop: 12,
   },
   linkRow: {
     flexDirection: 'row',
