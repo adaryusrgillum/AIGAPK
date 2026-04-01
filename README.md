@@ -4,8 +4,9 @@ Native Android app for Abel Insurance Group, built with Kotlin and Jetpack Compo
 
 ## What is in this build
 
-- Branded home screen with original Abel-themed launcher and in-app logo assets
+- Website-aligned home screen with the real Abel wordmark, favicon, and site palette
 - Abel-specific photography integrated into the app experience
+- Texture-backed hero styling inspired by the live Abel website
 - Coverage sections for personal, business, and industry insurance
 - Quick actions for quote request, phone, email, and client portal access
 - In-app service center webview for:
@@ -21,7 +22,7 @@ Native Android app for Abel Insurance Group, built with Kotlin and Jetpack Compo
 - Application ID: `com.abelinsgroup.mobile`
 - Min SDK: 26
 - Target SDK: 34
-- Version: `3.1.0`
+- Version: `3.1.1`
 
 ## Build locally
 
@@ -38,7 +39,7 @@ $env:ANDROID_SDK_ROOT='c:\Users\adary\Downloads\APK\tooling\android-sdk'
 
 The signed installable APK produced for this release is:
 
-- `app/build/outputs/apk/release/abel-insurance-group-3.1.0.apk`
+- `app/build/outputs/apk/release/abel-insurance-group-3.1.1.apk`
 
 ## Notes
 

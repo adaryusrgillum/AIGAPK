@@ -2,9 +2,10 @@ package com.agentic.android.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Sand = Color(0xFFF7F4EE)
-val Ink = Color(0xFF132433)
-val Moss = Color(0xFF183A56)
-val Clay = Color(0xFFC58B3A)
-val Mist = Color(0xFFE8EEF3)
-val Stone = Color(0xFF607182)
+val AbelCanvas = Color(0xFFF3F1EE)
+val AbelSurface = Color(0xFFFFFFFF)
+val AbelNavy = Color(0xFF0B2D50)
+val AbelLogoBlue = Color(0xFF1B6DC1)
+val AbelTaupe = Color(0xFF7B6958)
+val AbelMist = Color(0xFFE6EEF7)
+val AbelWarmPanel = Color(0xFFE7DED6)

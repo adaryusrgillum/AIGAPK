@@ -11,6 +11,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -41,6 +42,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -130,24 +133,28 @@ private fun AbelInsuranceApp() {
     var activeDestination by remember { mutableStateOf(serviceDestinations.first()) }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                ),
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Image(
-                            painter = painterResource(id = R.drawable.abel_logo_mark),
+                            painter = painterResource(id = R.drawable.abel_logo_wordmark),
                             contentDescription = "Abel Insurance Group",
-                            modifier = Modifier.size(38.dp)
+                            modifier = Modifier
+                                .width(224.dp)
+                                .height(36.dp),
+                            contentScale = ContentScale.Fit
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text("Abel Insurance Group", fontWeight = FontWeight.SemiBold)
-                            Text(
-                                "Local knowledge, innovative solutions",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        Text(
+                            "Local Knowledge, Innovative Solutions.",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             )
@@ -189,62 +196,107 @@ private fun HeroSection() {
     val context = LocalContext.current
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        shape = RoundedCornerShape(28.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(28.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.18f))
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(360.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(id = R.drawable.abel_logo_mark),
-                    contentDescription = "Abel Insurance mark",
-                    modifier = Modifier.size(64.dp)
+            Image(
+                painter = painterResource(id = R.drawable.abel_site_texture),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color(0x990B2D50),
+                                Color(0xE60B2D50)
+                            )
+                        )
+                    )
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(18.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
+                ) {
+                    Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                        Image(
+                            painter = painterResource(id = R.drawable.abel_logo_wordmark),
+                            contentDescription = "Abel Insurance Group logo",
+                            modifier = Modifier
+                                .width(248.dp)
+                                .height(40.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
+
+                Text(
+                    text = "We're Here to Put Your Needs First",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = "Abel Insurance Group",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Family-owned independent insurance agency",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                Text(
+                    text = "Abel Insurance Group is dedicated to protecting what matters most.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = "Serving Buckhannon, WV and beyond with local expertise, modern technology, and straightforward insurance guidance.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.92f)
+                )
+
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    InfoBadge("Personal")
+                    InfoBadge("Business")
+                    InfoBadge("Independent")
                 }
-            }
 
-            Text(
-                text = "Helping Buckhannon, WV and surrounding communities compare coverage with confidence across personal, business, and industry-specific risk.",
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Text(
-                text = "Licensed in WV, VA, MD, OH, PA, and KY.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+                Spacer(modifier = Modifier.weight(1f))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                InfoBadge("Home")
-                InfoBadge("Business")
-                InfoBadge("Industry")
-            }
+                Text(
+                    text = "Licensed in WV, VA, MD, OH, PA, and KY.",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                Button(
-                    onClick = { launchUriIntent(context, PersonalQuoteUrl) },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Get A Quote")
-                }
-                OutlinedButton(
-                    onClick = { launchUriIntent(context, ClientPortalUrl) },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Client Portal")
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        onClick = { launchUriIntent(context, PersonalQuoteUrl) },
+                        modifier = Modifier.weight(1f),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text("Request Quote")
+                    }
+                    OutlinedButton(
+                        onClick = { launchUriIntent(context, ClientPortalUrl) },
+                        modifier = Modifier.weight(1f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)),
+                        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    ) {
+                        Text("Visit Portal")
+                    }
                 }
             }
         }
@@ -270,7 +322,11 @@ private fun PhotographySection() {
 
 @Composable
 private fun PhotoCard(title: String, summary: String, imageRes: Int) {
-    Card(shape = RoundedCornerShape(24.dp)) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.16f))
+    ) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Image(
                 painter = painterResource(id = imageRes),
@@ -390,7 +446,11 @@ private fun ServiceCenterSection(
 
 @Composable
 private fun WebViewCard(url: String) {
-    Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.16f))
+    ) {
         AndroidView(
             modifier = Modifier
                 .fillMaxWidth()
@@ -448,7 +508,7 @@ private fun ReviewCard(review: Review) {
 private fun ContactSection() {
     val context = LocalContext.current
 
-    SectionCard(title = "Contact And Service Area") {
+    SectionCard(title = "Contact Us") {
         ContactRow(Icons.Outlined.LocationOn, OfficeAddress)
         ContactRow(Icons.Outlined.Call, OfficePhoneDisplay)
         ContactRow(Icons.Outlined.Email, OfficeEmail)
@@ -508,7 +568,8 @@ private fun ActionCard(action: ActionItem, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.16f))
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -517,10 +578,10 @@ private fun ActionCard(action: ActionItem, modifier: Modifier = Modifier) {
             Box(
                 modifier = Modifier
                     .size(42.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(14.dp)),
+                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(action.icon, contentDescription = null)
+                Icon(action.icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
             }
             Text(action.title, fontWeight = FontWeight.SemiBold)
             Text(action.summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -534,7 +595,11 @@ private fun ActionCard(action: ActionItem, modifier: Modifier = Modifier) {
 @Composable
 private fun CoverageCard(group: CoverageGroup) {
     val context = LocalContext.current
-    Card(shape = RoundedCornerShape(24.dp)) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.16f))
+    ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -543,10 +608,10 @@ private fun CoverageCard(group: CoverageGroup) {
                 Box(
                     modifier = Modifier
                         .size(42.dp)
-                        .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(14.dp)),
+                        .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(group.icon, contentDescription = null)
+                    Icon(group.icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
                 Column {
                     Text(group.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -576,11 +641,21 @@ private fun ContactRow(icon: androidx.compose.ui.graphics.vector.ImageVector, te
 
 @Composable
 private fun SectionCard(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Card(shape = RoundedCornerShape(24.dp)) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.16f))
+    ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            Box(
+                modifier = Modifier
+                    .width(58.dp)
+                    .height(4.dp)
+                    .background(MaterialTheme.colorScheme.secondary, RoundedCornerShape(999.dp))
+            )
             Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             HorizontalDivider()
             content()
@@ -590,7 +665,12 @@ private fun SectionCard(title: String, content: @Composable ColumnScope.() -> Un
 
 @Composable
 private fun SectionTitle(title: String) {
-    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+    Text(
+        title,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onBackground
+    )
 }
 
 @Composable
@@ -600,7 +680,7 @@ private fun InfoBadge(text: String) {
             .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(999.dp))
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-        Text(text, style = MaterialTheme.typography.labelLarge)
+        Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSecondaryContainer)
     }
 }
 
