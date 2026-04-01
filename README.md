@@ -1,150 +1,60 @@
-# Agentic Android - Local AI Agent on Your Phone
+# Abel Insurance Group Android App
 
-An Android app that enables **offline AI research, browser control, and agent tasks** by downloading and running quantized LLM models directly on your phone.
+Native Android app for Abel Insurance Group, built with Kotlin and Jetpack Compose.
 
-## Features
+## What is in this build
 
-✅ **Download & Run Models Locally** — No backend required after initial setup  
-✅ **Popular Quantized Models** — Mistral 7B, Llama2 7B, TinyLlama 1.1B, and more  
-✅ **Smart Inference Routing** — Auto-detects local models and runs them on-device  
-✅ **Fallback to Remote API** — Connect to Ollama if local models unavailable  
-✅ **Browser Control Surface** — WebView pane for research and automation  
-✅ **Storage Management** — View and delete models directly from app  
+- Branded home screen with original Abel-themed launcher and in-app logo assets
+- Abel-specific photography integrated into the app experience
+- Coverage sections for personal, business, and industry insurance
+- Quick actions for quote request, phone, email, and client portal access
+- In-app service center webview for:
+  - Client portal
+  - Contact form
+  - Personal quote form
+  - Commercial quote form
+  - Life quote flow
+- Buckhannon office contact information, directions, and social links
 
-## Quick Start
+## Build details
 
-### 1. Install APK
+- Application ID: `com.abelinsgroup.mobile`
+- Min SDK: 26
+- Target SDK: 34
+- Version: `3.1.0`
 
-Download `app-debug.apk` from [GitHub Releases](https://github.com/adaryusrgillum/apk/releases/tag/v0.1.0)
+## Build locally
 
-- Enable "Install from unknown sources" if needed
-- Install on Android device (API 26+)
+On Windows PowerShell:
 
-### 2. Download Models
-
-Once installed, open the app:
-
-1. **Tap "Phone-Local Models" panel**
-2. **Tap "Show Available Models"**
-3. **Select a model** and tap "Download"
-
-Available models:
-- **Mistral 7B Instruct (Q4)** — 4.5 GB — Fast, capable chat
-- **Llama2 7B Chat (Q4)** — 4.3 GB — Safe, well-tested
-- **Neural Chat 7B (Q4)** — 4.3 GB — Chat-optimized
-- **Orca Mini 7B (Q4)** — 4.3 GB — Instruction-following
-- **Mistral 7B (Q5)** — 6.5 GB — Higher quality
-- **TinyLlama 1.1B (Q8)** — 1.1 GB — Ultra-light for low-end devices
-
-### 3. Use Local Models
-
-Once a model downloads:
-
-1. **Model Selection Panel** auto-shows available local models
-2. **Type your prompt**
-3. **Tap "Send to Model"** → inference runs **on your phone**
-4. UI shows **"📱 Phone (Local)"** indicator
-
-## How It Works
-
-```
-User Input (Prompt)
-     ↓
-Is model available locally on phone?
-     ├─ YES → Run on-device via TensorFlow Lite/LLaMA.cpp → Response (no network)
-     └─ NO  → Send to remote Ollama API → Response (requires network)
+```powershell
+$env:JAVA_HOME='c:\Users\adary\Downloads\APK\tooling\jdk-17.0.18+8'
+$env:ANDROID_HOME='c:\Users\adary\Downloads\APK\tooling\android-sdk'
+$env:ANDROID_SDK_ROOT='c:\Users\adary\Downloads\APK\tooling\android-sdk'
+.\gradlew.bat assembleRelease
 ```
 
-## Offline Capabilities
+## Release artifact
 
-Once you have a local model downloaded:
+The signed installable APK produced for this release is:
 
-✅ **Chat & Research** — Ask questions, get answers, no internet  
-✅ **Browser Control** — Navigate sites, extract info, no network needed  
-✅ **Agent Planning** — Multi-step research tasks, all local  
-✅ **Long Conversations** — Keep talking, model stays on-device  
+- `app/build/outputs/apk/release/abel-insurance-group-3.1.0.apk`
 
-## For Powerful Setup (Desktop Bridge)
+## Notes
 
-If you want faster inference or more capable models:
+- The release APK in this repo was signed with the local Android debug keystore available on the build machine so it can be installed directly.
+- Abel Insurance Group site links and contact flows are used as in-app destinations for the service center webview.
 
-1. **Keep Ollama running on desktop**
-2. **Set endpoint to your PC IP** (e.g., `192.168.x.x:11434`)
-3. **App falls back to remote** when local models unavailable
-4. Best of both: local models for privacy, remote for power
+## Project structure
 
-## Storage Requirements
-
-- **Device space needed:** Depends on model (1 GB – 7 GB)
-- **Download location:** `/Android/data/com.agentic.android/files/models/`
-- **Manage storage:** Tap "Delete" on any downloaded model in app
-
-## For Developers
-
-### Repo Structure
-
-```
+```text
 app/src/main/java/com/agentic/android/
-├── MainActivity.kt           — UI shells for all panels
-├── model/
-│   ├── LocalModelManager.kt  — Model storage & lifecycle
-│   ├── ModelDownloader.kt    — Download with progress
-│   └── QuantizedModelRegistry.kt  — Available models + URLs
-├── inference/
-│   └── LocalInferenceEngine.kt   — On-device inference routing
-├── ollama/
-│   ├── OllamaClient.kt      — Remote + local chat API
-│   └── OllamaMessage.kt
+├── MainActivity.kt
 └── ui/theme/
+
+app/src/main/res/
+├── drawable/
+├── drawable-nodpi/
+├── mipmap-anydpi-v26/
+└── values/
 ```
-
-### Adding More Models
-
-Edit `QuantizedModelRegistry.kt`:
-
-```kotlin
-ModelInfo(
-    name = "your-model.gguf",
-    displayName = "Your Model",
-    url = "https://huggingface.co/USER/REPO/resolve/main/your-model.gguf",
-    size = "X GB",
-    description = "Your description"
-)
-```
-
-### Building Locally
-
-```bash
-./gradlew assembleDebug
-# APK: app/build/outputs/apk/debug/app-debug.apk
-```
-
-## Known Limitations
-
-- **Inference is slow on phones** — 7B model ~5-30 tokens/sec depending on device
-- **Large models need high-end phones** — 7B models need 6GB+ RAM
-- **TinyLlama (1.1B) recommended** for mid-range devices
-- **First inference slower** — Model loads into memory on first run
-
-## Planned Improvements
-
-- [ ] Real streaming responses (token-by-token)
-- [ ] Quantized ONNX model support (faster on ARM)
-- [ ] Model download progress indicator
-- [ ] Background model downloading
-- [ ] Multi-GPU inference (if available)
-
-## License
-
-MIT License — Free to use and modify
-
-## Resources
-
-- [Hugging Face GGUF Models](https://huggingface.co/models?search=gguf)
-- [TheBloke's Quantized Models](https://huggingface.co/TheBloke/) (recommended source)
-- [TensorFlow Lite on Android](https://www.tensorflow.org/lite/android)
-- [LLaMA.cpp Android](https://github.com/ggerganov/llama.cpp/blob/master/scripts/build.sh)
-
----
-
-**Questions?** Check the [GitHub Issues](https://github.com/adaryusrgillum/apk/issues) or create one!

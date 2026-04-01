@@ -1,75 +1,106 @@
 package com.agentic.android
 
-import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.webkit.CookieManager
+import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.outlined.Business
+import androidx.compose.material.icons.outlined.Call
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.DirectionsCar
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.agentic.android.inference.LocalInferenceEngine
-import com.agentic.android.model.LocalModelManager
-import com.agentic.android.model.ModelDownloader
-import com.agentic.android.model.QuantizedModelRegistry
 import com.agentic.android.ui.theme.AgenticAndroidTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+
+private const val MainSiteUrl = "https://www.abelinsgroup.com/"
+private const val PersonalInsuranceUrl = "https://www.abelinsgroup.com/personal-insurance/"
+private const val BusinessInsuranceUrl = "https://www.abelinsgroup.com/business-insurance/"
+private const val IndustryInsuranceUrl = "https://www.abelinsgroup.com/business-insurance/insurance-by-industry/"
+private const val ClientPortalUrl = "https://customerservice.agentinsure.com/EzLynxCustomerService/web/abel/account/login"
+private const val ContactFormUrl = "https://www.abelinsgroup.com/contact/#get-in-touch"
+private const val PersonalQuoteUrl = "https://form.jotform.com/Abel_Travis/AIG_Quote_Form"
+private const val CommercialQuoteUrl = "https://form.jotform.com/Abel_Travis/AIG_Commercial_Quote_Form"
+private const val LifeQuoteUrl = "https://app.back9ins.com/apply/TravisAbel"
+private const val FacebookUrl = "https://www.facebook.com/Abel.Ins.Group"
+private const val LinkedInUrl = "https://www.linkedin.com/company/abelinsgroup/"
+private const val OfficePhone = "3048785900"
+private const val OfficePhoneDisplay = "304-878-5900"
+private const val OfficeEmail = "contact@abelinsgroup.com"
+private const val OfficeFaxDisplay = "304-621-6044"
+private const val OfficeAddress = "172 S. Kanawha Street, Buckhannon, WV 26201"
+
+private data class CoverageGroup(
+    val title: String,
+    val summary: String,
+    val items: List<String>,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val ctaLabel: String,
+    val ctaUrl: String
+)
+
+private data class ActionItem(
+    val title: String,
+    val summary: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val target: String
+)
+
+private data class ServiceDestination(
+    val title: String,
+    val summary: String,
+    val url: String
+)
+
+private data class Review(
+    val quote: String,
+    val author: String
+)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,10 +108,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             AgenticAndroidTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    val localModelManager = remember { LocalModelManager(this@MainActivity) }
-                    val modelDownloader = remember { ModelDownloader(localModelManager) }
-                    val localInferenceEngine = remember { LocalInferenceEngine(this@MainActivity, localModelManager) }
-                    AgentHomeScreen(localModelManager, modelDownloader, localInferenceEngine)
+                    AbelInsuranceApp()
                 }
             }
         }
@@ -89,28 +117,38 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AgentHomeScreen(
-    localModelManager: LocalModelManager,
-    modelDownloader: ModelDownloader,
-    localInferenceEngine: LocalInferenceEngine
-) {
-    var bundledModelBootstrapComplete by remember { mutableStateOf(false) }
-    var bundledModelBootstrapStatus by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            localModelManager.getDefaultBundledModelName()?.let { modelName ->
-                bundledModelBootstrapStatus = localModelManager.installBundledModel(modelName).message
-            }
-        }
-        bundledModelBootstrapComplete = true
+private fun AbelInsuranceApp() {
+    val serviceDestinations = remember {
+        listOf(
+            ServiceDestination("Client Portal", "Policy servicing and account requests.", ClientPortalUrl),
+            ServiceDestination("Contact Form", "Send a question or request directly to the agency.", ContactFormUrl),
+            ServiceDestination("Personal Quote", "Start a household coverage quote.", PersonalQuoteUrl),
+            ServiceDestination("Commercial Quote", "Start a business quote workflow.", CommercialQuoteUrl),
+            ServiceDestination("Life Quote", "Open the life insurance quote experience.", LifeQuoteUrl)
+        )
     }
+    var activeDestination by remember { mutableStateOf(serviceDestinations.first()) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Agentic Android", fontWeight = FontWeight.SemiBold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.abel_logo_mark),
+                            contentDescription = "Abel Insurance Group",
+                            modifier = Modifier.size(38.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text("Abel Insurance Group", fontWeight = FontWeight.SemiBold)
+                            Text(
+                                "Local knowledge, innovative solutions",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             )
         }
@@ -131,18 +169,25 @@ private fun AgentHomeScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            HeroCard()
-            CapabilityRow()
-            AgentActionsPanel()
-            LocalModelsPanel(localModelManager, modelDownloader, bundledModelBootstrapComplete, bundledModelBootstrapStatus)
-            LocalChatPanel(localModelManager, localInferenceEngine, bundledModelBootstrapComplete)
-            BrowserPanel()
+            HeroSection()
+            PhotographySection()
+            QuickActionsSection()
+            CoverageSection()
+            ServiceCenterSection(
+                activeDestination = activeDestination,
+                destinations = serviceDestinations,
+                onDestinationChange = { activeDestination = it }
+            )
+            ReviewsSection()
+            ContactSection()
         }
     }
 }
 
 @Composable
-private fun HeroCard() {
+private fun HeroSection() {
+    val context = LocalContext.current
+
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         shape = RoundedCornerShape(28.dp)
@@ -151,61 +196,323 @@ private fun HeroCard() {
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(id = R.drawable.abel_logo_mark),
+                    contentDescription = "Abel Insurance mark",
+                    modifier = Modifier.size(64.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = "Abel Insurance Group",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Family-owned independent insurance agency",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+
             Text(
-                text = "AI operator for research, browsing, and long-running tasks",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Use the phone as the control surface. Run local models on-device for research, browsing support, and long-running tasks.",
+                text = "Helping Buckhannon, WV and surrounding communities compare coverage with confidence across personal, business, and industry-specific risk.",
                 style = MaterialTheme.typography.bodyLarge
             )
             Text(
-                text = "This build is configured for local-first inference only, with phone-side model management and local chat execution.",
-                style = MaterialTheme.typography.bodyMedium
+                text = "Licensed in WV, VA, MD, OH, PA, and KY.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                InfoBadge("Home")
+                InfoBadge("Business")
+                InfoBadge("Industry")
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = { launchUriIntent(context, PersonalQuoteUrl) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Get A Quote")
+                }
+                OutlinedButton(
+                    onClick = { launchUriIntent(context, ClientPortalUrl) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Client Portal")
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun CapabilityRow() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        CapabilityCard(
-            modifier = Modifier.weight(1f),
-            title = "Model",
-            detail = "On-device local inference",
-            icon = { Icon(Icons.Outlined.Storage, contentDescription = null) }
+private fun PhotographySection() {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SectionTitle("Featured Coverage Moments")
+        PhotoCard(
+            title = "Personal protection",
+            summary = "A calm, family-first view that aligns with Abel's home and auto coverage approach.",
+            imageRes = R.drawable.abel_family_hero
         )
-        CapabilityCard(
-            modifier = Modifier.weight(1f),
-            title = "Research",
-            detail = "Queued multi-step tasks",
-            icon = { Icon(Icons.Outlined.Search, contentDescription = null) }
-        )
-        CapabilityCard(
-            modifier = Modifier.weight(1f),
-            title = "Browser",
-            detail = "WebView plus agent actions",
-            icon = { Icon(Icons.Outlined.Language, contentDescription = null) }
+        PhotoCard(
+            title = "Business protection",
+            summary = "A small-business image that fits the agency's commercial and industry coverage focus.",
+            imageRes = R.drawable.abel_business_hero
         )
     }
 }
 
 @Composable
-private fun CapabilityCard(
-    modifier: Modifier = Modifier,
-    title: String,
-    detail: String,
-    icon: @Composable () -> Unit
+private fun PhotoCard(title: String, summary: String, imageRes: Int) {
+    Card(shape = RoundedCornerShape(24.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Image(
+                painter = painterResource(id = imageRes),
+                contentDescription = title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(188.dp)
+                    .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
+                contentScale = ContentScale.Crop
+            )
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(title, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                Text(summary, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Spacer(modifier = Modifier.height(2.dp))
+        }
+    }
+}
+
+@Composable
+private fun QuickActionsSection() {
+    val coverageActions = listOf(
+        ActionItem("Request Quote", "Open Abel's quote workflow.", Icons.Outlined.Description, PersonalQuoteUrl),
+        ActionItem("Client Portal", "Manage policies and service requests.", Icons.AutoMirrored.Outlined.OpenInNew, ClientPortalUrl),
+        ActionItem("Call Office", "Speak with the Buckhannon team.", Icons.Outlined.Call, "tel:$OfficePhone"),
+        ActionItem("Email", "Send a message to the office inbox.", Icons.Outlined.Email, "mailto:$OfficeEmail")
+    )
+
+    SectionCard(title = "Quick Actions") {
+        ActionRow(coverageActions[0], coverageActions[1])
+        ActionRow(coverageActions[2], coverageActions[3])
+    }
+}
+
+@Composable
+private fun CoverageSection() {
+    val groups = listOf(
+        CoverageGroup(
+            title = "Personal Insurance",
+            summary = "Protection for household property, vehicles, liability, and life-stage needs.",
+            items = listOf("Home", "Auto", "Umbrella", "Motorcycle", "Flood", "Life", "Renters"),
+            icon = Icons.Outlined.Home,
+            ctaLabel = "See personal options",
+            ctaUrl = PersonalInsuranceUrl
+        ),
+        CoverageGroup(
+            title = "Business Insurance",
+            summary = "Coverage for operations, property, staff, fleets, and risk management.",
+            items = listOf("Business owners", "General liability", "Commercial property", "Workers' comp", "Commercial bonds", "Cyber liability"),
+            icon = Icons.Outlined.Business,
+            ctaLabel = "See business options",
+            ctaUrl = BusinessInsuranceUrl
+        ),
+        CoverageGroup(
+            title = "Insurance by Industry",
+            summary = "Coverage packages designed around trade-specific exposures.",
+            items = listOf("Contractors", "Rental property", "Condo buildings", "Restaurants", "Trucking"),
+            icon = Icons.Outlined.DirectionsCar,
+            ctaLabel = "See industry options",
+            ctaUrl = IndustryInsuranceUrl
+        )
+    )
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SectionTitle("Coverage Snapshot")
+        groups.forEach { group ->
+            CoverageCard(group)
+        }
+    }
+}
+
+@Composable
+private fun ServiceCenterSection(
+    activeDestination: ServiceDestination,
+    destinations: List<ServiceDestination>,
+    onDestinationChange: (ServiceDestination) -> Unit
 ) {
-    Card(modifier = modifier, shape = RoundedCornerShape(20.dp)) {
+    val context = LocalContext.current
+
+    SectionCard(title = "Service Center") {
+        Text(
+            text = "Use the in-app webview to work inside Abel's client portal, contact form, or quote pages without leaving the app.",
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        destinations.chunked(2).forEach { rowItems ->
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                rowItems.forEach { destination ->
+                    val selected = destination.title == activeDestination.title
+                    OutlinedButton(
+                        onClick = { onDestinationChange(destination) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(if (selected) "• ${destination.title}" else destination.title)
+                    }
+                }
+                if (rowItems.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+
+        Text(activeDestination.summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+        WebViewCard(url = activeDestination.url)
+
+        OutlinedButton(onClick = { launchUriIntent(context, activeDestination.url) }, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Open current page externally")
+        }
+    }
+}
+
+@Composable
+private fun WebViewCard(url: String) {
+    Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+        AndroidView(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(420.dp),
+            factory = { context ->
+                WebView(context).apply {
+                    CookieManager.getInstance().setAcceptCookie(true)
+                    CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                    settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    settings.loadsImagesAutomatically = true
+                    settings.useWideViewPort = true
+                    settings.loadWithOverviewMode = true
+                    webChromeClient = WebChromeClient()
+                    webViewClient = WebViewClient()
+                    loadUrl(url)
+                }
+            },
+            update = { webView ->
+                if (webView.url != url) {
+                    webView.loadUrl(url)
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun ReviewsSection() {
+    val reviews = listOf(
+        Review("Excellent communication from a knowledgeable and friendly staff helped us secure a competitive rate for our insurance needs.", "Terri O."),
+        Review("They were great helping us get our insurance coverage set up. They were prompt and professional.", "Kelly C."),
+        Review("Wonderful company. Travis and Joyce have been awesome at finding the best coverage for us and helped to find coverage that is affordable.", "Sharla S.")
+    )
+
+    SectionCard(title = "Client Feedback") {
+        reviews.forEachIndexed { index, review ->
+            ReviewCard(review)
+            if (index < reviews.lastIndex) {
+                HorizontalDivider()
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReviewCard(review: Review) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text("\"${review.quote}\"", style = MaterialTheme.typography.bodyMedium)
+        Text(review.author, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun ContactSection() {
+    val context = LocalContext.current
+
+    SectionCard(title = "Contact And Service Area") {
+        ContactRow(Icons.Outlined.LocationOn, OfficeAddress)
+        ContactRow(Icons.Outlined.Call, OfficePhoneDisplay)
+        ContactRow(Icons.Outlined.Email, OfficeEmail)
+        ContactRow(Icons.Outlined.Description, "Fax: $OfficeFaxDisplay")
+        ContactRow(Icons.Outlined.VerifiedUser, "Licensed in WV, VA, MD, OH, PA, and KY")
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(
+                onClick = { launchUriIntent(context, MainSiteUrl) },
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(Icons.Outlined.Language, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Website")
+            }
+            OutlinedButton(
+                onClick = { launchUriIntent(context, FacebookUrl) },
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Facebook")
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(
+                onClick = { launchUriIntent(context, LinkedInUrl) },
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("LinkedIn")
+            }
+            OutlinedButton(
+                onClick = { launchUriIntent(context, "geo:0,0?q=${Uri.encode(OfficeAddress)}") },
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(Icons.Outlined.LocationOn, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Directions")
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActionRow(left: ActionItem, right: ActionItem) {
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+        ActionCard(left, Modifier.weight(1f))
+        ActionCard(right, Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun ActionCard(action: ActionItem, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -213,722 +520,105 @@ private fun CapabilityCard(
                     .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                icon()
+                Icon(action.icon, contentDescription = null)
             }
-            Text(title, fontWeight = FontWeight.SemiBold)
-            Text(detail, style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
-
-@SuppressLint("SetJavaScriptEnabled")
-@Composable
-private fun BrowserPanel() {
-    var address by remember { mutableStateOf("https://example.org") }
-    var activeUrl by remember { mutableStateOf(address) }
-
-    Card(shape = RoundedCornerShape(24.dp)) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(Icons.Outlined.AutoAwesome, contentDescription = null)
-                Text("Browser control surface", style = MaterialTheme.typography.titleMedium)
+            Text(action.title, fontWeight = FontWeight.SemiBold)
+            Text(action.summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedButton(onClick = { launchUriIntent(context, action.target) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Open")
             }
-            OutlinedTextField(
-                value = address,
-                onValueChange = { address = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("URL") },
-                singleLine = true
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(onClick = { activeUrl = address }) {
-                    Text("Open")
-                }
-                Button(onClick = { activeUrl = "https://news.ycombinator.com" }) {
-                    Text("Demo target")
-                }
-            }
-            AndroidView(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(320.dp),
-                factory = { context ->
-                    WebView(context).apply {
-                        settings.javaScriptEnabled = true
-                        webViewClient = WebViewClient()
-                        loadUrl(activeUrl)
-                    }
-                },
-                update = { webView ->
-                    if (webView.url != activeUrl) {
-                        webView.loadUrl(activeUrl)
-                    }
-                }
-            )
         }
     }
 }
 
 @Composable
-private fun AgentActionsPanel() {
+private fun CoverageCard(group: CoverageGroup) {
     val context = LocalContext.current
-    var status by remember { mutableStateOf("Ready. Actions always require user-visible confirmation.") }
-
     Card(shape = RoundedCornerShape(24.dp)) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("Agent Action Hub", style = MaterialTheme.typography.titleMedium)
-            Text(
-                "High-capability automations using secure Android intents (no hidden background control).",
-                style = MaterialTheme.typography.bodySmall
-            )
-
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(onClick = {
-                    status = launchSafeIntent(
-                        context,
-                        Intent(Intent.ACTION_VIEW).apply {
-                            data = Uri.parse("https://www.linkedin.com/jobs")
-                        },
-                        "Opening job applications"
-                    )
-                }) {
-                    Text("Apply to Jobs")
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(14.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(group.icon, contentDescription = null)
                 }
-
-                Button(onClick = {
-                    status = launchSafeIntent(
-                        context,
-                        Intent(Intent.ACTION_SENDTO).apply {
-                            data = Uri.parse("mailto:")
-                            putExtra(Intent.EXTRA_SUBJECT, "Application from Agentic Android")
-                            putExtra(Intent.EXTRA_TEXT, "Hi, I am interested in this role. Please find my resume attached.")
-                        },
-                        "Opening email composer"
-                    )
-                }) {
-                    Text("Email")
+                Column {
+                    Text(group.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text(group.summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(onClick = {
-                    status = launchSafeIntent(
-                        context,
-                        Intent(Intent.ACTION_SENDTO).apply {
-                            data = Uri.parse("smsto:")
-                            putExtra("sms_body", "Hi - sharing an update from Agentic Android.")
-                        },
-                        "Opening SMS composer"
-                    )
-                }) {
-                    Text("Text")
-                }
-
-                Button(onClick = {
-                    status = launchSafeIntent(
-                        context,
-                        Intent(Intent.ACTION_VIEW).apply {
-                            data = Uri.parse("https://www.snapchat.com")
-                        },
-                        "Opening Snapchat web"
-                    )
-                }) {
-                    Text("Snapchat")
+            group.items.forEach { item ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Text(item, style = MaterialTheme.typography.bodyMedium)
                 }
             }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(onClick = {
-                    val pkg = context.packageManager.getLaunchIntentForPackage("com.google.android.gm")
-                    status = if (pkg != null) {
-                        launchSafeIntent(context, pkg, "Opening Gmail app")
-                    } else {
-                        "Gmail not installed"
-                    }
-                }) {
-                    Text("Open Gmail")
-                }
-
-                Button(onClick = {
-                    val pkg = context.packageManager.getLaunchIntentForPackage("com.snapchat.android")
-                    status = if (pkg != null) {
-                        launchSafeIntent(context, pkg, "Opening Snapchat app")
-                    } else {
-                        "Snapchat app not installed"
-                    }
-                }) {
-                    Text("Open Snapchat")
-                }
+            Button(onClick = { launchUriIntent(context, group.ctaUrl) }, modifier = Modifier.fillMaxWidth()) {
+                Text(group.ctaLabel)
             }
-
-            Text(status, style = MaterialTheme.typography.bodySmall)
         }
-    }
-}
-
-private fun launchSafeIntent(context: android.content.Context, intent: Intent, successStatus: String): String {
-    return try {
-        context.startActivity(Intent.createChooser(intent, "Choose app"))
-        successStatus
-    } catch (_: ActivityNotFoundException) {
-        "No compatible app found"
     }
 }
 
 @Composable
-private fun LocalModelsPanel(
-    localModelManager: LocalModelManager,
-    modelDownloader: ModelDownloader,
-    bundledModelBootstrapComplete: Boolean,
-    bundledModelBootstrapStatus: String?
-) {
-    val scope = rememberCoroutineScope()
-    var localModels by remember { mutableStateOf<List<String>>(emptyList()) }
-    var totalStorageUsed by remember { mutableStateOf(0L) }
-    var availableStorage by remember { mutableStateOf(0L) }
-    var downloadingModel by remember { mutableStateOf<String?>(null) }
-    var downloadProgress by remember { mutableStateOf(0) }
-    var showAvailableModels by remember { mutableStateOf(false) }
-    var bundledModels by remember { mutableStateOf<List<String>>(emptyList()) }
-    var transferStatus by remember { mutableStateOf<String?>(null) }
-
-    // Refresh local models on first composition.
-    LaunchedEffect(bundledModelBootstrapComplete) {
-        if (!bundledModelBootstrapComplete) {
-            return@LaunchedEffect
-        }
-
-        withContext(Dispatchers.IO) {
-            localModels = localModelManager.listLocalModels()
-            bundledModels = localModelManager.listBundledModels()
-            totalStorageUsed = localModelManager.getTotalStorageUsed()
-            availableStorage = localModelManager.getAvailableStorage()
-        }
+private fun ContactRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Text(text, style = MaterialTheme.typography.bodyMedium)
     }
+}
 
+@Composable
+private fun SectionCard(title: String, content: @Composable ColumnScope.() -> Unit) {
     Card(shape = RoundedCornerShape(24.dp)) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(Icons.Outlined.Storage, contentDescription = null)
-                Text("Phone-Local Models", style = MaterialTheme.typography.titleMedium)
-            }
-
-            Text(
-                text = "Storage: ${localModelManager.formatSize(totalStorageUsed)} used / ${localModelManager.formatSize(availableStorage)} available",
-                style = MaterialTheme.typography.bodySmall
-            )
-
-            if (!bundledModelBootstrapStatus.isNullOrBlank()) {
-                Text(
-                    text = bundledModelBootstrapStatus,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (bundledModelBootstrapStatus.startsWith("Not enough", ignoreCase = true)) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.secondary
-                    }
-                )
-            }
-
-            if (!transferStatus.isNullOrBlank()) {
-                Text(
-                    text = transferStatus.orEmpty(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (transferStatus!!.startsWith("Error") || transferStatus!!.startsWith("Not enough")) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.secondary
-                    }
-                )
-            }
-
-            if (localModels.isEmpty()) {
-                Text(
-                    text = "No models downloaded yet. Download a GGUF model below to enable fully local chat.",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    localModels.forEach { model ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp))
-                                .padding(10.dp)
-                        ) {
-                            Column {
-                                Text(model, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-                                Text(
-                                    localModelManager.formatSize(localModelManager.getModelSize(model)),
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                            }
-                            IconButton(
-                                onClick = {
-                                    scope.launch {
-                                        withContext(Dispatchers.IO) {
-                                            localModelManager.deleteModel(model)
-                                            localModels = localModelManager.listLocalModels()
-                                            totalStorageUsed = localModelManager.getTotalStorageUsed()
-                                        }
-                                    }
-                                }
-                            ) {
-                                Icon(Icons.Outlined.Delete, contentDescription = "Delete")
-                            }
-                        }
-                    }
-                }
-            }
-
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             HorizontalDivider()
-
-            if (bundledModels.isNotEmpty()) {
-                Text("Bundled Models", style = MaterialTheme.typography.titleSmall)
-                bundledModels.forEach { modelName ->
-                    val isInstalled = localModels.contains(modelName)
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isInstalled) MaterialTheme.colorScheme.tertiaryContainer
-                            else MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(modelName, fontWeight = FontWeight.SemiBold)
-                            Text(
-                                "Bundled in APK: ${localModelManager.formatSize(localModelManager.getBundledModelSize(modelName))}",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            Text(
-                                "Recommended free space: ${localModelManager.formatSize(localModelManager.getRequiredStorageBytes(localModelManager.getBundledModelSize(modelName)))}",
-                                style = MaterialTheme.typography.labelSmall
-                            )
-
-                            if (isInstalled) {
-                                Text("Installed locally", color = MaterialTheme.colorScheme.primary)
-                            } else {
-                                Button(
-                                    onClick = {
-                                        downloadingModel = modelName
-                                        transferStatus = null
-                                        scope.launch {
-                                            withContext(Dispatchers.IO) {
-                                                val installResult = localModelManager.installBundledModel(modelName) { percent ->
-                                                    downloadProgress = percent
-                                                }
-                                                transferStatus = installResult.message
-                                                if (installResult.success) {
-                                                    localModels = localModelManager.listLocalModels()
-                                                    totalStorageUsed = localModelManager.getTotalStorageUsed()
-                                                    availableStorage = localModelManager.getAvailableStorage()
-                                                }
-                                                downloadingModel = null
-                                            }
-                                        }
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    enabled = downloadingModel == null
-                                ) {
-                                    Text("Install Bundled Model")
-                                }
-                            }
-                        }
-                    }
-                }
-
-                HorizontalDivider()
-            }
-
-            Button(
-                onClick = { showAvailableModels = !showAvailableModels },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (showAvailableModels) "Hide Available Models" else "Show Available Models")
-            }
-
-            if (downloadingModel != null) {
-                LinearProgressIndicator(
-                    progress = { downloadProgress / 100f },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text(
-                    text = "Downloading $downloadingModel ($downloadProgress%)",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            if (showAvailableModels) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    QuantizedModelRegistry.availableModels.forEach { modelInfo ->
-                        val isDownloaded = localModels.contains(modelInfo.name)
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isDownloaded) MaterialTheme.colorScheme.tertiaryContainer 
-                                                else MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Row(
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Column {
-                                        Text(
-                                            modelInfo.displayName,
-                                            fontWeight = FontWeight.SemiBold,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                        Text(
-                                            modelInfo.description,
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
-                                        Text(
-                                            "Size: ${modelInfo.size}",
-                                            style = MaterialTheme.typography.labelSmall
-                                        )
-                                    }
-                                    if (isDownloaded) {
-                                        Text("✓ Downloaded", color = MaterialTheme.colorScheme.primary)
-                                    }
-                                }
-
-                                if (!isDownloaded) {
-                                    Button(
-                                        onClick = {
-                                            downloadingModel = modelInfo.name
-                                            transferStatus = null
-                                            scope.launch {
-                                                withContext(Dispatchers.IO) {
-                                                    modelDownloader.downloadModel(
-                                                        url = modelInfo.url,
-                                                        modelName = modelInfo.name
-                                                    ).collectLatest { progress ->
-                                                        downloadProgress = progress.percentComplete
-                                                        transferStatus = progress.status
-                                                        if (progress.percentComplete == 100) {
-                                                            localModels = localModelManager.listLocalModels()
-                                                            totalStorageUsed = localModelManager.getTotalStorageUsed()
-                                                            availableStorage = localModelManager.getAvailableStorage()
-                                                            downloadingModel = null
-                                                        } else if (progress.status.startsWith("Error:")) {
-                                                            downloadingModel = null
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        enabled = downloadingModel == null
-                                    ) {
-                                        Text("Download")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            HorizontalDivider()
-
-            Button(
-                onClick = {
-                    scope.launch {
-                        withContext(Dispatchers.IO) {
-                            localModels = localModelManager.listLocalModels()
-                            bundledModels = localModelManager.listBundledModels()
-                            totalStorageUsed = localModelManager.getTotalStorageUsed()
-                            availableStorage = localModelManager.getAvailableStorage()
-                        }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Refresh")
-            }
+            content()
         }
     }
 }
 
 @Composable
-private fun LocalChatPanel(
-    localModelManager: LocalModelManager,
-    localInferenceEngine: LocalInferenceEngine,
-    bundledModelBootstrapComplete: Boolean
-) {
-    val scope = rememberCoroutineScope()
-
-    var downloadedModels by remember { mutableStateOf<List<String>>(emptyList()) }
-    var model by remember { mutableStateOf("") }
-    var prompt by remember { mutableStateOf("Research: summarize the top 3 Android agent architecture patterns.") }
-    var showModelPresets by remember { mutableStateOf(false) }
-    var loading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var modelStatus by remember { mutableStateOf<String?>(null) }
-    val deviceProfile = remember { localInferenceEngine.getDeviceRuntimeProfile() }
-    var messages by remember {
-        mutableStateOf(
-            listOf(
-                UiMessage(
-                    role = "assistant",
-                    content = "Local model console ready. Download a GGUF model, select it, and send a prompt."
-                )
-            )
-        )
-    }
-
-    LaunchedEffect(bundledModelBootstrapComplete) {
-        if (!bundledModelBootstrapComplete) {
-            return@LaunchedEffect
-        }
-
-        withContext(Dispatchers.IO) {
-            downloadedModels = localInferenceEngine.listAvailableLocalModels().map { it.first }
-        }
-
-        val defaultBundledModel = localModelManager.getDefaultBundledModelName()
-        model = when {
-            defaultBundledModel != null && downloadedModels.contains(defaultBundledModel) -> defaultBundledModel
-            downloadedModels.isNotEmpty() -> downloadedModels.first()
-            else -> ""
-        }
-
-        modelStatus = if (model.isNotBlank()) {
-            "Default local model: $model"
-        } else {
-            "No local model installed yet"
-        }
-    }
-
-    Card(shape = RoundedCornerShape(24.dp)) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text("Local model console", style = MaterialTheme.typography.titleMedium)
-            Text(
-                text = deviceProfile.notes,
-                style = MaterialTheme.typography.bodySmall
-            )
-
-            OutlinedTextField(
-                value = model,
-                onValueChange = { model = it.trim() },
-                label = { Text("Local model file") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Button(
-                    onClick = { showModelPresets = !showModelPresets },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Popular models")
-                }
-
-                DropdownMenu(
-                    expanded = showModelPresets,
-                    onDismissRequest = { showModelPresets = false },
-                    modifier = Modifier.fillMaxWidth(0.9f)
-                ) {
-                    downloadedModels.forEach { modelId ->
-                        DropdownMenuItem(
-                            text = {
-                                Column {
-                                    Text(modelId, fontWeight = FontWeight.SemiBold)
-                                    Text("Downloaded and available on this device", style = MaterialTheme.typography.bodySmall)
-                                }
-                            },
-                            onClick = {
-                                model = modelId
-                                showModelPresets = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(
-                    onClick = {
-                        scope.launch {
-                            downloadedModels = withContext(Dispatchers.IO) {
-                                localInferenceEngine.listAvailableLocalModels().map { it.first }
-                            }
-                            if (model.isBlank()) {
-                                model = downloadedModels.firstOrNull().orEmpty()
-                            }
-                            modelStatus = "Local models found: ${downloadedModels.size}"
-                        }
-                    },
-                    enabled = !loading
-                ) {
-                    Text("Refresh Local Models")
-                }
-            }
-
-            if (!modelStatus.isNullOrBlank()) {
-                Text(
-                    text = modelStatus.orEmpty(),
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            if (downloadedModels.isNotEmpty()) {
-                Text(
-                    text = "Local models: ${downloadedModels.joinToString()}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            OutlinedTextField(
-                value = prompt,
-                onValueChange = { prompt = it },
-                label = { Text("Prompt") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3
-            )
-
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(
-                    onClick = {
-                        val trimmedPrompt = prompt.trim()
-                        if (trimmedPrompt.isEmpty() || loading) {
-                            return@Button
-                        }
-
-                        errorMessage = null
-                        val selectedModel = model.trim()
-                        if (!localInferenceEngine.isModelAvailable(selectedModel)) {
-                            errorMessage = "Selected model is not downloaded locally"
-                            return@Button
-                        }
-
-                        val priorMessages = messages
-                        val nextMessages = priorMessages + UiMessage("user", trimmedPrompt)
-                        messages = nextMessages
-                        prompt = ""
-                        loading = true
-
-                        scope.launch {
-                            val result = runCatching {
-                                val modelPath = localInferenceEngine.getModelInfo(selectedModel)["path"]
-                                    ?: error("Missing local model path")
-
-                                withContext(Dispatchers.IO) {
-                                    localInferenceEngine.inferWithLocalModel(
-                                        modelPath = modelPath,
-                                        prompt = trimmedPrompt,
-                                        maxTokens = deviceProfile.defaultMaxTokens,
-                                        temperature = deviceProfile.defaultTemperature
-                                    )
-                                }
-                            }
-
-                            result
-                                .onSuccess { inferenceFlow ->
-                                    inferenceFlow.collectLatest { response ->
-                                        messages = messages + UiMessage("assistant", response.text)
-                                    }
-                                }
-                                .onFailure { err ->
-                                    errorMessage = err.message ?: "Unknown inference error"
-                                }
-
-                            loading = false
-                        }
-                    },
-                    enabled = !loading
-                ) {
-                    Text(if (loading) "Inferencing..." else "Send to Model")
-                }
-
-                IconButton(onClick = {
-                    messages = emptyList()
-                    errorMessage = null
-                }) {
-                    Text("Clear")
-                }
-            }
-
-            if (loading) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            }
-
-            Text(
-                text = "Model source: 📱 Phone (Local only)",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.tertiary
-            )
-
-            if (!errorMessage.isNullOrBlank()) {
-                Text(
-                    text = "Error: $errorMessage",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            HorizontalDivider()
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                messages.forEach { message ->
-                    MessageBubble(message)
-                }
-            }
-        }
-    }
+private fun SectionTitle(title: String) {
+    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
 }
 
 @Composable
-private fun MessageBubble(message: UiMessage) {
-    val isUser = message.role == "user"
-    val background = if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
-
-    Column(
+private fun InfoBadge(text: String) {
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
-            .background(background, RoundedCornerShape(14.dp))
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+            .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(999.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-        Text(
-            text = if (isUser) "You" else "Assistant",
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-        Text(text = message.content, style = MaterialTheme.typography.bodyMedium)
+        Text(text, style = MaterialTheme.typography.labelLarge)
     }
 }
 
-private data class UiMessage(
-    val role: String,
-    val content: String
-)
+private fun launchUriIntent(context: Context, target: String) {
+    val intent = when {
+        target.startsWith("mailto:") -> Intent(Intent.ACTION_SENDTO, Uri.parse(target))
+        target.startsWith("tel:") -> Intent(Intent.ACTION_DIAL, Uri.parse(target))
+        target.startsWith("geo:") -> Intent(Intent.ACTION_VIEW, Uri.parse(target))
+        else -> Intent(Intent.ACTION_VIEW, Uri.parse(target))
+    }
+
+    runCatching {
+        context.startActivity(intent)
+    }.recoverCatching {
+        context.startActivity(Intent.createChooser(intent, "Open with"))
+    }.getOrElse {
+        if (it !is ActivityNotFoundException) {
+            throw it
+        }
+    }
+}

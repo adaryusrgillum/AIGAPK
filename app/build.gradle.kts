@@ -8,11 +8,11 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.agentic.android"
+        applicationId = "com.abelinsgroup.mobile"
         minSdk = 26
         targetSdk = 34
-        versionCode = 202
-        versionName = "2.0.2"
+        versionCode = 310
+        versionName = "3.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -43,11 +43,6 @@ android {
         compose = true
     }
 
-    androidResources {
-        noCompress += "gguf"
-        noCompress += "tflite"
-    }
-
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
     }
@@ -72,11 +67,6 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.google.android.material:material:1.12.0")
-    implementation("androidx.webkit:webkit:1.12.1")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("androidx.work:work-runtime-ktx:2.8.1")
-    implementation("org.tensorflow:tensorflow-lite:2.14.0")
-    implementation("org.tensorflow:tensorflow-lite-gpu:2.14.0")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
