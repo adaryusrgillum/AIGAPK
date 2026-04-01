@@ -1,0 +1,80 @@
+name: Build APK (Backup)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+
+      - name: Expo prebuild
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Build debug APK
+        working-directory: android
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx2g
+        run: ./gradlew assembleDebug --no-daemon --warning-mode=none
+
+      - name: Collect APK
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/AbelInsuranceGroup-debug.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AbelInsuranceGroup-debug
+          path: release/AbelInsuranceGroup-debug.apk
+
+      - name: Create or update release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-debug
+          name: Abel Insurance Group v1.0.0 (Debug)
+          body: |
+            ## Abel Insurance Group - Android App (Debug Build)
+
+            Backup build — debug APK. Download and install on your Android device.
+            You may need to enable "Install from unknown sources" in your device settings.
+
+            ### Features
+            - Personal & Business Insurance catalogs
+            - Company information and mission
+            - Client reviews and testimonials
+            - Contact form, phone, email, and directions
+            - Client portal access
+          files: release/AbelInsuranceGroup-debug.apk
+          draft: false
+          prerelease: true
