@@ -17,6 +17,7 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AmbientBackdrop, TiltCard } from '../components/ExperienceComponents';
+import { useAuth } from '../context/AuthContext';
 import { CONTACT_INFO } from '../data';
 import { signIn, signUp, resetPassword } from '../services/auth';
 import { COLORS } from '../theme';
@@ -26,6 +27,7 @@ const MODE_SIGN_UP = 'signup';
 const MODE_RESET = 'reset';
 
 export default function LoginScreen() {
+  const { adminSignIn } = useAuth();
   const [mode, setMode] = useState(MODE_SIGN_IN);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -77,6 +79,7 @@ export default function LoginScreen() {
     setIsSubmitting(true);
     try {
       if (mode === MODE_SIGN_IN) {
+        if (adminSignIn(trimEmail, password)) return;
         await signIn(trimEmail, password);
       } else if (mode === MODE_SIGN_UP) {
         await signUp(trimEmail, password, name.trim() || undefined);
@@ -261,6 +264,22 @@ export default function LoginScreen() {
                 <Text style={styles.textButtonLabel}>Back to sign in</Text>
               </TouchableOpacity>
             )}
+
+            <TouchableOpacity
+              style={styles.adminButton}
+              onPress={() => {
+                setError('');
+                setEmail('admin@abelinsgroup.com');
+                setPassword('Admin2026!');
+                setTimeout(() => {
+                  adminSignIn('admin@abelinsgroup.com', 'Admin2026!');
+                }, 100);
+              }}
+              activeOpacity={0.82}
+            >
+              <MaterialCommunityIcons name="shield-crown" size={18} color="#FFD700" />
+              <Text style={styles.secondaryButtonText}>Admin Demo Login</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.portalButton}
@@ -484,6 +503,18 @@ const styles = StyleSheet.create({
     color: COLORS.slateText,
     fontSize: 12,
     marginHorizontal: 14,
+  },
+  adminButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(27,58,92,0.6)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.3)',
+    paddingVertical: 15,
+    marginTop: 12,
   },
   portalButton: {
     flexDirection: 'row',

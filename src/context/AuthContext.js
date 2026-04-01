@@ -1,22 +1,43 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
+
+const ADMIN_EMAIL = 'admin@abelinsgroup.com';
+const ADMIN_PASSWORD = 'Admin2026!';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
+      if (!isAdmin) setUser(firebaseUser);
       if (initializing) setInitializing(false);
     });
     return unsubscribe;
-  }, [initializing]);
+  }, [initializing, isAdmin]);
 
-  const value = useMemo(() => ({ user, initializing }), [user, initializing]);
+  const adminSignIn = useCallback((email, password) => {
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+      setUser({ displayName: 'Admin', email: ADMIN_EMAIL, uid: 'admin-demo' });
+      setIsAdmin(true);
+      return true;
+    }
+    return false;
+  }, []);
+
+  const adminSignOut = useCallback(() => {
+    setUser(null);
+    setIsAdmin(false);
+  }, []);
+
+  const value = useMemo(
+    () => ({ user, isAdmin, initializing, adminSignIn, adminSignOut }),
+    [user, isAdmin, initializing, adminSignIn, adminSignOut],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
