@@ -1,8 +1,16 @@
 export const COLORS = {
-  primary: '#1B3A5C',      // Deep navy blue
+  primary: '#1B3A5C',
   primaryDark: '#0F2440',
-  secondary: '#C8A951',    // Gold accent
+  secondary: '#C8A951',
   secondaryLight: '#E8D498',
+  secondarySoft: '#D9C67B',
+  midnight: '#081425',
+  signalBlue: '#3E8BFF',
+  steel: '#7F8FAE',
+  slateText: '#A7B7CF',
+  glass: 'rgba(255,255,255,0.08)',
+  glassStrong: 'rgba(11, 26, 45, 0.88)',
+  glassBorder: 'rgba(255,255,255,0.12)',
   white: '#FFFFFF',
   offWhite: '#F5F6FA',
   lightGray: '#E8EBF0',
