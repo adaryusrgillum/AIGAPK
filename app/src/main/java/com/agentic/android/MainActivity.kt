@@ -465,77 +465,6 @@ private fun LocalModelsPanel(
                 Text(if (showAvailableModels) "Hide Available Models" else "Show Available Models")
             }
 
-            Button(
-                onClick = {
-                    if (downloadingModel != null) {
-                        return@Button
-                    }
-
-                    val starterPack = listOf(
-                        QuantizedModelRegistry.getModelByName("tinyllama-1b-q8.gguf"),
-                        QuantizedModelRegistry.getModelByName("llama-3.1-8b-instruct-q4.gguf")
-                    ).filterNotNull()
-
-                    scope.launch {
-                        downloadModelBatch(
-                            models = starterPack,
-                            initialStatus = "Starting offline starter pack download (2 models)...",
-                            completionStatus = "Offline starter pack complete.",
-                            onModelDownloading = { downloadingModel = it },
-                            onProgress = { percent, status ->
-                                downloadProgress = percent
-                                starterPackStatus = status
-                            },
-                            onRefresh = {
-                                localModels = localModelManager.listLocalModels()
-                                totalStorageUsed = localModelManager.getTotalStorageUsed()
-                                availableStorage = localModelManager.getAvailableStorage()
-                            },
-                            downloader = modelDownloader
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = downloadingModel == null
-            ) {
-                Text("Download Offline Starter Pack (2 GGUF)")
-            }
-
-            Button(
-                onClick = {
-                    if (downloadingModel != null) {
-                        return@Button
-                    }
-
-                    val topPack = QuantizedModelRegistry
-                        .getTopThinkingAndMultiTaskModels(maxSizeGb = 10)
-                        .take(4)
-
-                    scope.launch {
-                        downloadModelBatch(
-                            models = topPack,
-                            initialStatus = "Starting HF bulk download (top ${topPack.size} models)...",
-                            completionStatus = "HF bulk model download complete.",
-                            onModelDownloading = { downloadingModel = it },
-                            onProgress = { percent, status ->
-                                downloadProgress = percent
-                                starterPackStatus = status
-                            },
-                            onRefresh = {
-                                localModels = localModelManager.listLocalModels()
-                                totalStorageUsed = localModelManager.getTotalStorageUsed()
-                                availableStorage = localModelManager.getAvailableStorage()
-                            },
-                            downloader = modelDownloader
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = downloadingModel == null
-            ) {
-                Text("Download Top HF Thinking Pack (4 GGUF)")
-            }
-
             if (!starterPackStatus.isNullOrBlank()) {
                 Text(starterPackStatus.orEmpty(), style = MaterialTheme.typography.bodySmall)
             }
@@ -628,33 +557,6 @@ private fun LocalModelsPanel(
                 Text("Refresh")
             }
         }
-    }
-}
-
-private suspend fun downloadModelBatch(
-    models: List<QuantizedModelRegistry.ModelInfo>,
-    initialStatus: String,
-    completionStatus: String,
-    onModelDownloading: (String?) -> Unit,
-    onProgress: (Int, String) -> Unit,
-    onRefresh: suspend () -> Unit,
-    downloader: ModelDownloader
-) {
-    withContext(Dispatchers.IO) {
-        onProgress(0, initialStatus)
-        models.forEach { modelInfo ->
-            onModelDownloading(modelInfo.name)
-            downloader.downloadModel(
-                url = modelInfo.url,
-                modelName = modelInfo.name
-            ).collectLatest { progress ->
-                onProgress(progress.percentComplete, "${modelInfo.displayName}: ${progress.status}")
-            }
-        }
-
-        onRefresh()
-        onModelDownloading(null)
-        onProgress(100, completionStatus)
     }
 }
 

@@ -1,21 +1,68 @@
 package com.agentic.android.inference
 
 import android.content.Context
+import android.os.Build
 import com.agentic.android.model.LocalModelManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.io.File
+import kotlin.math.max
+import kotlin.math.min
 
 class LocalInferenceEngine(
     private val context: Context,
     private val localModelManager: LocalModelManager
 ) {
 
+    data class DeviceRuntimeProfile(
+        val isSamsungS25Ultra: Boolean,
+        val preferredThreadCount: Int,
+        val preferGpu: Boolean,
+        val defaultMaxTokens: Int,
+        val defaultTemperature: Float,
+        val notes: String
+    )
+
     data class InferenceResult(
         val text: String,
         val tokensPerSecond: Float = 0f,
-        val totalTokens: Int = 0
+        val totalTokens: Int = 0,
+        val modelName: String = ""
     )
+
+    fun getDeviceRuntimeProfile(): DeviceRuntimeProfile {
+        val manufacturer = Build.MANUFACTURER.orEmpty()
+        val model = Build.MODEL.orEmpty()
+        val isSamsung = manufacturer.equals("samsung", ignoreCase = true)
+        val looksLikeS25Ultra = model.contains("S25", ignoreCase = true) || model.contains("S938", ignoreCase = true)
+        val isS25Ultra = isSamsung && looksLikeS25Ultra
+        val cpuCores = Runtime.getRuntime().availableProcessors()
+        val preferredThreads = if (isS25Ultra) {
+            min(8, max(4, cpuCores - 2))
+        } else {
+            min(6, max(2, cpuCores - 2))
+        }
+
+        return if (isS25Ultra) {
+            DeviceRuntimeProfile(
+                isSamsungS25Ultra = true,
+                preferredThreadCount = preferredThreads,
+                preferGpu = true,
+                defaultMaxTokens = 768,
+                defaultTemperature = 0.55f,
+                notes = "S25 Ultra profile: high context, balanced creativity, GPU preferred."
+            )
+        } else {
+            DeviceRuntimeProfile(
+                isSamsungS25Ultra = false,
+                preferredThreadCount = preferredThreads,
+                preferGpu = false,
+                defaultMaxTokens = 512,
+                defaultTemperature = 0.65f,
+                notes = "Generic profile: balanced defaults for broad Android compatibility."
+            )
+        }
+    }
 
     fun isModelAvailable(modelName: String): Boolean {
         val modelFile = localModelManager.getLocalModelPath(modelName)
@@ -33,22 +80,30 @@ class LocalInferenceEngine(
             throw IllegalArgumentException("Model file not found: $modelPath")
         }
 
-        // For .gguf files (LLaMA.cpp format) - placeholder for actual inference
-        if (modelPath.endsWith(".gguf")) {
-            emit(InferenceResult(
-                text = "[Local LLaMA inference would run here with: $prompt]",
-                tokensPerSecond = 0f,
-                totalTokens = 0
-            ))
+        val profile = getDeviceRuntimeProfile()
+        val tunedMaxTokens = min(maxTokens, profile.defaultMaxTokens)
+        val tunedTemperature = if (profile.isSamsungS25Ultra) {
+            min(temperature, profile.defaultTemperature)
+        } else {
+            temperature
         }
-        // For .tflite files (TensorFlow Lite format) - placeholder for actual inference
-        else if (modelPath.endsWith(".tflite")) {
-            emit(InferenceResult(
-                text = "[Local TFLite inference would run here with: $prompt]",
-                tokensPerSecond = 0f,
-                totalTokens = 0
-            ))
-        }
+
+        val smokeResult = LocalInferenceSmokeTester.runChat(
+            modelPath = modelPath,
+            prompt = prompt,
+            maxTokens = tunedMaxTokens,
+            temperature = tunedTemperature,
+            deviceNotes = profile.notes
+        )
+
+        emit(
+            InferenceResult(
+                text = smokeResult.text,
+                tokensPerSecond = smokeResult.tokensPerSecond,
+                totalTokens = smokeResult.totalTokens,
+                modelName = file.name
+            )
+        )
     }
 
     fun listAvailableLocalModels(): List<Pair<String, String>> {

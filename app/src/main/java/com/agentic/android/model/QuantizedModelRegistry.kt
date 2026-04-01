@@ -50,6 +50,22 @@ object QuantizedModelRegistry {
             description = "Best coding-focused GGUF in this size class with strong tool-oriented outputs."
         ),
         ModelInfo(
+            name = "phi-3-mini-4k-instruct-q4_k_m.gguf",
+            displayName = "Phi-3 Mini 4K Instruct (Q4)",
+            url = "https://huggingface.co/bartowski/Phi-3-mini-4k-instruct-GGUF/resolve/main/Phi-3-mini-4k-instruct-Q4_K_M.gguf",
+            size = "2.2 GB",
+            supportedTasks = listOf("reasoning", "chat", "coding"),
+            description = "Lightweight but capable model with strong small-model reasoning quality."
+        ),
+        ModelInfo(
+            name = "gemma-2-2b-it-q4_k_m.gguf",
+            displayName = "Gemma 2 2B IT (Q4)",
+            url = "https://huggingface.co/bartowski/gemma-2-2b-it-GGUF/resolve/main/gemma-2-2b-it-Q4_K_M.gguf",
+            size = "1.6 GB",
+            supportedTasks = listOf("chat", "reasoning", "analysis"),
+            description = "Very efficient conversational model suitable for high-throughput mobile chat."
+        ),
+        ModelInfo(
             name = "mistral-7b-instruct-q4.gguf",
             displayName = "Mistral 7B Instruct (Q4)",
             url = "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/Mistral-7B-Instruct-v0.2-Q4_K_M.gguf",
@@ -109,6 +125,23 @@ object QuantizedModelRegistry {
                 "analysis" in it.supportedTasks ||
                 "coding" in it.supportedTasks
             )
+        }
+    }
+
+    fun getSamsungS25UltraPack(maxSizeGb: Int = 10): List<ModelInfo> {
+        val preferredOrder = listOf(
+            "deepseek-r1-distill-qwen-14b-q4.gguf",
+            "qwen2.5-14b-instruct-q4.gguf",
+            "llama-3.1-8b-instruct-q4.gguf",
+            "qwen2.5-coder-7b-instruct-q4.gguf",
+            "phi-3-mini-4k-instruct-q4_k_m.gguf",
+            "gemma-2-2b-it-q4_k_m.gguf"
+        )
+
+        return preferredOrder.mapNotNull { name ->
+            getModelByName(name)
+        }.filter { model ->
+            model.size.split(" ")[0].toFloatOrNull()?.let { it <= maxSizeGb } ?: false
         }
     }
 
