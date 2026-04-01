@@ -41,8 +41,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,9 +52,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.agentic.android.ui.theme.AgenticAndroidTheme
@@ -105,6 +105,68 @@ private data class Review(
     val author: String
 )
 
+private data class ResponsiveLayout(
+    val compactWidth: Boolean,
+    val compactHeight: Boolean,
+    val singleColumn: Boolean,
+    val wideLayout: Boolean,
+    val contentPadding: Dp,
+    val heroHeight: Dp,
+    val photoHeight: Dp,
+    val webViewHeight: Dp,
+    val topBarLogoWidth: Dp,
+    val heroLogoWidth: Dp
+)
+
+@Composable
+private fun rememberResponsiveLayout(): ResponsiveLayout {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp
+    val screenHeight = configuration.screenHeightDp
+    val wideLayout = screenWidth >= 840
+    val compactWidth = screenWidth < 380
+    val singleColumn = screenWidth < 430
+    val compactHeight = screenHeight < 700
+
+    return ResponsiveLayout(
+        compactWidth = compactWidth,
+        compactHeight = compactHeight,
+        singleColumn = singleColumn,
+        wideLayout = wideLayout,
+        contentPadding = when {
+            wideLayout -> 24.dp
+            compactWidth -> 12.dp
+            else -> 16.dp
+        },
+        heroHeight = when {
+            wideLayout -> 420.dp
+            compactHeight -> 300.dp
+            compactWidth -> 340.dp
+            else -> 360.dp
+        },
+        photoHeight = when {
+            wideLayout -> 220.dp
+            compactWidth -> 164.dp
+            else -> 188.dp
+        },
+        webViewHeight = when {
+            wideLayout -> 520.dp
+            compactHeight -> 320.dp
+            else -> 420.dp
+        },
+        topBarLogoWidth = when {
+            wideLayout -> 280.dp
+            compactWidth -> 188.dp
+            else -> 224.dp
+        },
+        heroLogoWidth = when {
+            wideLayout -> 300.dp
+            compactWidth -> 208.dp
+            else -> 248.dp
+        }
+    )
+}
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -121,6 +183,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AbelInsuranceApp() {
+    val layout = rememberResponsiveLayout()
     val serviceDestinations = remember {
         listOf(
             ServiceDestination("Client Portal", "Policy servicing and account requests.", ClientPortalUrl),
@@ -135,32 +198,10 @@ private fun AbelInsuranceApp() {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
-                ),
-                title = {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Image(
-                            painter = painterResource(id = R.drawable.abel_logo_wordmark),
-                            contentDescription = "Abel Insurance Group",
-                            modifier = Modifier
-                                .width(224.dp)
-                                .height(36.dp),
-                            contentScale = ContentScale.Fit
-                        )
-                        Text(
-                            "Local Knowledge, Innovative Solutions.",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            )
+            AbelTopBar(layout)
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
@@ -172,27 +213,70 @@ private fun AbelInsuranceApp() {
                     )
                 )
                 .padding(innerPadding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = layout.contentPadding, vertical = 12.dp)
         ) {
-            HeroSection()
-            PhotographySection()
-            QuickActionsSection()
-            CoverageSection()
-            ServiceCenterSection(
-                activeDestination = activeDestination,
-                destinations = serviceDestinations,
-                onDestinationChange = { activeDestination = it }
-            )
-            ReviewsSection()
-            ContactSection()
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 920.dp)
+                    .align(Alignment.TopCenter)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                HeroSection(layout)
+                PhotographySection(layout)
+                QuickActionsSection(layout)
+                CoverageSection()
+                ServiceCenterSection(
+                    activeDestination = activeDestination,
+                    destinations = serviceDestinations,
+                    onDestinationChange = { activeDestination = it },
+                    layout = layout
+                )
+                ReviewsSection()
+                ContactSection(layout)
+            }
         }
     }
 }
 
 @Composable
-private fun HeroSection() {
+private fun AbelTopBar(layout: ResponsiveLayout) {
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 3.dp,
+        tonalElevation = 1.dp
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 920.dp)
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(horizontal = layout.contentPadding, vertical = if (layout.compactWidth) 10.dp else 12.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.abel_logo_wordmark),
+                    contentDescription = "Abel Insurance Group",
+                    modifier = Modifier
+                        .widthIn(max = layout.topBarLogoWidth)
+                        .height(if (layout.compactWidth) 30.dp else 36.dp),
+                    contentScale = ContentScale.Fit
+                )
+                Text(
+                    "Local Knowledge, Innovative Solutions.",
+                    style = if (layout.compactWidth) MaterialTheme.typography.bodySmall else MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeroSection(layout: ResponsiveLayout) {
     val context = LocalContext.current
 
     Card(
@@ -203,7 +287,7 @@ private fun HeroSection() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(360.dp)
+                .height(layout.heroHeight)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.abel_site_texture),
@@ -226,20 +310,20 @@ private fun HeroSection() {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(if (layout.compactWidth) 16.dp else 20.dp),
+                verticalArrangement = Arrangement.spacedBy(if (layout.compactWidth) 10.dp else 12.dp)
             ) {
                 Surface(
                     shape = RoundedCornerShape(18.dp),
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
                 ) {
-                    Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                    Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = if (layout.compactWidth) 12.dp else 14.dp)) {
                         Image(
                             painter = painterResource(id = R.drawable.abel_logo_wordmark),
                             contentDescription = "Abel Insurance Group logo",
                             modifier = Modifier
-                                .width(248.dp)
-                                .height(40.dp),
+                                .widthIn(max = layout.heroLogoWidth)
+                                .height(if (layout.compactWidth) 34.dp else 40.dp),
                             contentScale = ContentScale.Fit
                         )
                     }
@@ -247,7 +331,7 @@ private fun HeroSection() {
 
                 Text(
                     text = "We're Here to Put Your Needs First",
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = if (layout.compactWidth) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
@@ -262,10 +346,20 @@ private fun HeroSection() {
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.92f)
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    InfoBadge("Personal")
-                    InfoBadge("Business")
-                    InfoBadge("Independent")
+                if (layout.compactWidth) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            InfoBadge("Personal")
+                            InfoBadge("Business")
+                        }
+                        InfoBadge("Independent")
+                    }
+                } else {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        InfoBadge("Personal")
+                        InfoBadge("Business")
+                        InfoBadge("Independent")
+                    }
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -276,53 +370,82 @@ private fun HeroSection() {
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                    Button(
-                        onClick = { launchUriIntent(context, PersonalQuoteUrl) },
-                        modifier = Modifier.weight(1f),
-                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
-                    ) {
-                        Text("Request Quote")
+                ResponsivePair(
+                    stacked = layout.singleColumn,
+                    first = { modifier ->
+                        Button(
+                            onClick = { launchUriIntent(context, PersonalQuoteUrl) },
+                            modifier = modifier,
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Text("Request Quote")
+                        }
+                    },
+                    second = { modifier ->
+                        OutlinedButton(
+                            onClick = { launchUriIntent(context, ClientPortalUrl) },
+                            modifier = modifier,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)),
+                            colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        ) {
+                            Text("Visit Portal")
+                        }
                     }
-                    OutlinedButton(
-                        onClick = { launchUriIntent(context, ClientPortalUrl) },
-                        modifier = Modifier.weight(1f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)),
-                        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    ) {
-                        Text("Visit Portal")
-                    }
-                }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun PhotographySection() {
+private fun PhotographySection(layout: ResponsiveLayout) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SectionTitle("Featured Coverage Moments")
-        PhotoCard(
-            title = "Personal protection",
-            summary = "A calm, family-first view that aligns with Abel's home and auto coverage approach.",
-            imageRes = R.drawable.abel_family_hero
-        )
-        PhotoCard(
-            title = "Business protection",
-            summary = "A small-business image that fits the agency's commercial and industry coverage focus.",
-            imageRes = R.drawable.abel_business_hero
-        )
+        if (layout.wideLayout) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                PhotoCard(
+                    title = "Personal protection",
+                    summary = "A calm, family-first view that aligns with Abel's home and auto coverage approach.",
+                    imageRes = R.drawable.abel_family_hero,
+                    modifier = Modifier.weight(1f),
+                    imageHeight = layout.photoHeight
+                )
+                PhotoCard(
+                    title = "Business protection",
+                    summary = "A small-business image that fits the agency's commercial and industry coverage focus.",
+                    imageRes = R.drawable.abel_business_hero,
+                    modifier = Modifier.weight(1f),
+                    imageHeight = layout.photoHeight
+                )
+            }
+        } else {
+            PhotoCard(
+                title = "Personal protection",
+                summary = "A calm, family-first view that aligns with Abel's home and auto coverage approach.",
+                imageRes = R.drawable.abel_family_hero,
+                modifier = Modifier.fillMaxWidth(),
+                imageHeight = layout.photoHeight
+            )
+            PhotoCard(
+                title = "Business protection",
+                summary = "A small-business image that fits the agency's commercial and industry coverage focus.",
+                imageRes = R.drawable.abel_business_hero,
+                modifier = Modifier.fillMaxWidth(),
+                imageHeight = layout.photoHeight
+            )
+        }
     }
 }
 
 @Composable
-private fun PhotoCard(title: String, summary: String, imageRes: Int) {
+private fun PhotoCard(title: String, summary: String, imageRes: Int, modifier: Modifier = Modifier, imageHeight: Dp) {
     Card(
+        modifier = modifier,
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.16f))
@@ -333,7 +456,7 @@ private fun PhotoCard(title: String, summary: String, imageRes: Int) {
                 contentDescription = title,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(188.dp)
+                    .height(imageHeight)
                     .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
                 contentScale = ContentScale.Crop
             )
@@ -350,7 +473,7 @@ private fun PhotoCard(title: String, summary: String, imageRes: Int) {
 }
 
 @Composable
-private fun QuickActionsSection() {
+private fun QuickActionsSection(layout: ResponsiveLayout) {
     val coverageActions = listOf(
         ActionItem("Request Quote", "Open Abel's quote workflow.", Icons.Outlined.Description, PersonalQuoteUrl),
         ActionItem("Client Portal", "Manage policies and service requests.", Icons.AutoMirrored.Outlined.OpenInNew, ClientPortalUrl),
@@ -359,8 +482,8 @@ private fun QuickActionsSection() {
     )
 
     SectionCard(title = "Quick Actions") {
-        ActionRow(coverageActions[0], coverageActions[1])
-        ActionRow(coverageActions[2], coverageActions[3])
+        ActionRow(coverageActions[0], coverageActions[1], layout.singleColumn)
+        ActionRow(coverageActions[2], coverageActions[3], layout.singleColumn)
     }
 }
 
@@ -405,7 +528,8 @@ private fun CoverageSection() {
 private fun ServiceCenterSection(
     activeDestination: ServiceDestination,
     destinations: List<ServiceDestination>,
-    onDestinationChange: (ServiceDestination) -> Unit
+    onDestinationChange: (ServiceDestination) -> Unit,
+    layout: ResponsiveLayout
 ) {
     val context = LocalContext.current
 
@@ -415,26 +539,40 @@ private fun ServiceCenterSection(
             style = MaterialTheme.typography.bodyMedium
         )
 
-        destinations.chunked(2).forEach { rowItems ->
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                rowItems.forEach { destination ->
+        if (layout.singleColumn) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                destinations.forEach { destination ->
                     val selected = destination.title == activeDestination.title
                     OutlinedButton(
                         onClick = { onDestinationChange(destination) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(if (selected) "• ${destination.title}" else destination.title)
                     }
                 }
-                if (rowItems.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
+            }
+        } else {
+            destinations.chunked(2).forEach { rowItems ->
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                    rowItems.forEach { destination ->
+                        val selected = destination.title == activeDestination.title
+                        OutlinedButton(
+                            onClick = { onDestinationChange(destination) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(if (selected) "• ${destination.title}" else destination.title)
+                        }
+                    }
+                    if (rowItems.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
             }
         }
 
         Text(activeDestination.summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-        WebViewCard(url = activeDestination.url)
+        WebViewCard(url = activeDestination.url, height = layout.webViewHeight)
 
         OutlinedButton(onClick = { launchUriIntent(context, activeDestination.url) }, modifier = Modifier.fillMaxWidth()) {
             Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = null)
@@ -445,7 +583,7 @@ private fun ServiceCenterSection(
 }
 
 @Composable
-private fun WebViewCard(url: String) {
+private fun WebViewCard(url: String, height: Dp) {
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -454,7 +592,7 @@ private fun WebViewCard(url: String) {
         AndroidView(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(420.dp),
+                .height(height),
             factory = { context ->
                 WebView(context).apply {
                     CookieManager.getInstance().setAcceptCookie(true)
@@ -505,7 +643,7 @@ private fun ReviewCard(review: Review) {
 }
 
 @Composable
-private fun ContactSection() {
+private fun ContactSection(layout: ResponsiveLayout) {
     val context = LocalContext.current
 
     SectionCard(title = "Contact Us") {
@@ -515,51 +653,62 @@ private fun ContactSection() {
         ContactRow(Icons.Outlined.Description, "Fax: $OfficeFaxDisplay")
         ContactRow(Icons.Outlined.VerifiedUser, "Licensed in WV, VA, MD, OH, PA, and KY")
         Spacer(modifier = Modifier.height(4.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            OutlinedButton(
-                onClick = { launchUriIntent(context, MainSiteUrl) },
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(Icons.Outlined.Language, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Website")
+        ResponsivePair(
+            stacked = layout.singleColumn,
+            first = { modifier ->
+                OutlinedButton(
+                    onClick = { launchUriIntent(context, MainSiteUrl) },
+                    modifier = modifier
+                ) {
+                    Icon(Icons.Outlined.Language, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Website")
+                }
+            },
+            second = { modifier ->
+                OutlinedButton(
+                    onClick = { launchUriIntent(context, FacebookUrl) },
+                    modifier = modifier
+                ) {
+                    Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Facebook")
+                }
             }
-            OutlinedButton(
-                onClick = { launchUriIntent(context, FacebookUrl) },
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Facebook")
+        )
+        ResponsivePair(
+            stacked = layout.singleColumn,
+            first = { modifier ->
+                OutlinedButton(
+                    onClick = { launchUriIntent(context, LinkedInUrl) },
+                    modifier = modifier
+                ) {
+                    Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("LinkedIn")
+                }
+            },
+            second = { modifier ->
+                OutlinedButton(
+                    onClick = { launchUriIntent(context, "geo:0,0?q=${Uri.encode(OfficeAddress)}") },
+                    modifier = modifier
+                ) {
+                    Icon(Icons.Outlined.LocationOn, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Directions")
+                }
             }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            OutlinedButton(
-                onClick = { launchUriIntent(context, LinkedInUrl) },
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("LinkedIn")
-            }
-            OutlinedButton(
-                onClick = { launchUriIntent(context, "geo:0,0?q=${Uri.encode(OfficeAddress)}") },
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(Icons.Outlined.LocationOn, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Directions")
-            }
-        }
+        )
     }
 }
 
 @Composable
-private fun ActionRow(left: ActionItem, right: ActionItem) {
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-        ActionCard(left, Modifier.weight(1f))
-        ActionCard(right, Modifier.weight(1f))
-    }
+private fun ActionRow(left: ActionItem, right: ActionItem, stacked: Boolean) {
+    ResponsivePair(stacked, first = { modifier ->
+        ActionCard(left, modifier)
+    }, second = { modifier ->
+        ActionCard(right, modifier)
+    })
 }
 
 @Composable
@@ -681,6 +830,25 @@ private fun InfoBadge(text: String) {
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSecondaryContainer)
+    }
+}
+
+@Composable
+private fun ResponsivePair(
+    stacked: Boolean,
+    first: @Composable (Modifier) -> Unit,
+    second: @Composable (Modifier) -> Unit
+) {
+    if (stacked) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+            first(Modifier.fillMaxWidth())
+            second(Modifier.fillMaxWidth())
+        }
+    } else {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+            first(Modifier.weight(1f))
+            second(Modifier.weight(1f))
+        }
     }
 }
 

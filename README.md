@@ -22,7 +22,7 @@ Native Android app for Abel Insurance Group, built with Kotlin and Jetpack Compo
 - Application ID: `com.abelinsgroup.mobile`
 - Min SDK: 26
 - Target SDK: 34
-- Version: `3.1.1`
+- Version: `3.1.2`
 
 ## Build locally
 
@@ -39,12 +39,13 @@ $env:ANDROID_SDK_ROOT='c:\Users\adary\Downloads\APK\tooling\android-sdk'
 
 The signed installable APK produced for this release is:
 
-- `app/build/outputs/apk/release/abel-insurance-group-3.1.1.apk`
+- `app/build/outputs/apk/release/abel-insurance-group-3.1.2.apk`
 
 ## Notes
 
 - The release APK in this repo was signed with the local Android debug keystore available on the build machine so it can be installed directly.
 - Abel Insurance Group site links and contact flows are used as in-app destinations for the service center webview.
+- Version 3.1.2 adds breakpoint-aware responsiveness for narrow phones, landscape layouts, and wider screens.
 
 ## Project structure
 

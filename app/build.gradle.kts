@@ -11,8 +11,8 @@ android {
         applicationId = "com.abelinsgroup.mobile"
         minSdk = 26
         targetSdk = 34
-        versionCode = 311
-        versionName = "3.1.1"
+        versionCode = 312
+        versionName = "3.1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
